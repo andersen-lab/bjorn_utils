@@ -18,25 +18,10 @@ conda activate bjorn_utils
 * Install datafunk (inside the activated environment): [instructions (ensure environment is activated during installation)](https://github.com/cov-ert/datafunk)
 
 ## Usage
-### Information for Surveillance of SARS-CoV-2 Genomic Mutations
-* Activate `bjorn` environment
-```bash
-conda activate bjorn
-```
-* Copy and modify `test_config.json` to specify your parameters such as
-    * gisaid sign-in info 
-    * output directory where results are saved
-    * number of CPU cores available for use by minimap2
-    * current date (false for latest; fix for testing)    
-* Run the `run_pipeline.sh` script to initiate the Snakemake pipeline
-```bash
-bash run_pipeline.sh [CONFIG_FILE]
-```
-
 ### Post-processing of SARS-CoV-2 Sequencing Results for Release to public databases
 * Activate `bjorn` environment
 ```bash
-conda activate bjorn
+conda activate bjorn_utils
 ```
 * Open `run_alab_release.sh` to specify your parameters such as
     * filepath to sample sheet containing sample metadata (input)
