@@ -1,28 +1,18 @@
 import pandas as pd
-import matplotlib.pylab as plt
-from matplotlib.lines import Line2D
-import matplotlib.colors as mcolors
-import matplotlib.gridspec as gridspec
 from path import Path
 from shutil import copy, move
-from Bio import SeqIO, AlignIO, Phylo
+from Bio import SeqIO
 import argparse
 import glob
 import subprocess
 from multiprocessing import Pool
 from itertools import repeat
 import os
-from datetime import datetime as dt
 import bjorn_support as bs
 import mutations as bm
-# from bjorn_support import concat_fasta, align_fasta, compute_tree, map_gene_to_pos, load_fasta
-# from mutations import identify_replacements, identify_deletions, identify_insertions
-from onion_trees import load_tree, visualize_tree, get_indel2color, get_sample2color
-import data as bd
 import json
 
 
-## FUNCTION DEFINTIONS
 def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
     biosample_paths = glob.glob(f"{sra_dir}/*.txt")
     if biosample_paths:
@@ -110,13 +100,12 @@ def process_coverage_sample_ids(x):
         x = x[x.find("SEARCH"):]
     query = x.split('/')
     if len(query) == 1:
-        # query = fp.basename().split('_')[0].split('-')
         return ''.join(x.split("_")[0].split('-')[:2]) # Format could be SEARCH-xxxx-LOC or SEARCH-xxxx
     else:
         start_idx = x.find('SEARCH')
         return x[start_idx:start_idx+10] # SEARCHxxxx
 
-
+#TODO: Fix tarfile reference
 def compress_files(filepaths: list, destination='/home/al/tmp2/fa/samples.tar.gz'):
     "Utility function to compress list of files into a single .tar.gz file"
     with tarfile.open(destination, "w:gz") as tar:
@@ -232,8 +221,6 @@ def process_id(x):
     "Utility function to process sample IDs to fix inconsistencies in the format"
     return ''.join(x.split('-')[:2])
 
-## MAIN
-
 if __name__=="__main__":
     # Input Parameters
     # COLUMNS TO INCLUDE IN GITHUB METADATA
@@ -324,13 +311,6 @@ if __name__=="__main__":
     # Whether run is dry
     dry_run = args.not_dry_run
 
-    # # Test
-    # out_dir = "/home/gk/southpark/2020-11-21_release"
-    # sample_sheet_fpath = "/home/gk/code/hCoV19/release_summary_csv/2020-11-20_seq_summary.csv"
-    # analysis_fpath = "/home/gk/analysis/"
-    # released_samples_fpath = "/home/gk/analysis/hcov-19-genomics/metadata.csv"
-    # dry_run = True
-
     print(f"""User Specified Parameters:
     Dry run: {dry_run}.
     Include BAMS: {include_bams}.
@@ -362,7 +342,6 @@ if __name__=="__main__":
                                      tech='illumina',
                                      generalised=True,
                                      return_type='list')
-    # consensus_filepaths = glob.glob(f"{analysis_fpath}/**/consensus_sequences/illumina/*.fa")
     consensus_filepaths = [Path(fp) for fp in consensus_filepaths]
     # consolidate sample ID format
     consensus_ids = get_ids(consensus_filepaths)
@@ -417,8 +396,6 @@ if __name__=="__main__":
                                      tech='illumina/reports',
                                      generalised=True,
                                      return_type='list')
-    # cov_filepaths = glob.glob("{}/**/trimmed_bams/illumina/reports/*.tsv".format(analysis_fpath))
-    # get_ipython().getoutput("find {analysis_fpath} -type f -path '*trimmed_bams/illumina/reports*' -name '*.tsv'")
     cov_filepaths = [Path(fp) for fp in cov_filepaths]
     # read coverage data and clean it up
     cov_df = pd.concat((pd.read_csv(f, sep='\t').assign(path=f) for f in cov_filepaths))
@@ -467,30 +444,11 @@ if __name__=="__main__":
         git_meta_df = create_github_meta(ans.copy(), released_samples_fpath, git_meta_cols)
         # GISAID metadata for all samples (out_dir/gisaid_metadata.csv)
         gisaid_meta_df = create_gisaid_meta(ans.copy(), gisaid_meta_cols)
-        # assemble_genbank_release(cns_seqs, ans, genbank_meta_cols, out_dir/'genbank')
-        # sra_dir = out_dir/'sra'
-        # if not Path.isdir(sra_dir):
-        #     Path.mkdir(sra_dir);
-        # input(f"\n Have you received the BioSample.txt files and placed them inside {sra_dir}? \n Press Enter to continue...")
-        # create_sra_meta(ans, sra_dir)
         # generate file containing deletions found
         # generate multiple sequence alignment
         msa_fp = seqs_fp.split('.')[0] + '_aligned.fa'
         if not Path.isfile(Path(msa_fp)):
             msa_fp = bs.align_fasta(seqs_fp, msa_fp, num_cpus=num_cpus);
-        # compute ML tree
-        # tree_dir = out_dir/'trees'
-        # if not Path.isdir(tree_dir):
-        #     Path.mkdir(tree_dir);
-        # tree_fp = msa_fp + '.treefile'
-        # if not Path.isfile(Path(tree_fp)):
-        #     tree_fp = compute_tree(msa_fp, num_cpus=num_cpus)
-        # tree = load_tree(tree_fp, patient_zero)
-        # # Plot and save basic tree
-        # fig1 = visualize_tree(tree)
-        # fig1.savefig(tree_dir/'basic_tree.pdf')
-        # PLOT AND SAVE INDEL TREES
-        # colors = list(mcolors.TABLEAU_COLORS.keys())
         # path to new github metadata
         meta_fp = out_dir/'metadata.csv'
         # load multiple sequence alignment
@@ -546,30 +504,6 @@ if __name__=="__main__":
                                              out_dir=msa_dir, filename=seqs_fp.split('.')[0])
         # generate compressed report containing main results
         bs.generate_release_report(out_dir)
-        # print(sus_ids)
-        # print(nonconcerning_mutations)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # deletions = deletions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(deletions, colors)
-        # sample_colors = get_sample2color(deletions, colors)
-        # fig2 = visualize_tree(tree, sample_colors,
-        #            indels=deletions, colors=colors);
-        # fig2.savefig(tree_dir/'deletion_cns_tree.pdf', dpi=300)
-        # fig3 = visualize_tree(tree, sample_colors,
-        #                   indels=deletions, colors=colors,
-        #                   isnv_info=True);
-        # fig3.savefig(tree_dir/'deletion_isnv_tree.pdf', dpi=300)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # insertions = insertions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(insertions, colors)
-        # sample_colors = get_sample2color(insertions, colors)
-        # fig4 = visualize_tree(tree, sample_colors,
-        #            indels=insertions, colors=colors);
-        # fig4.savefig(tree_dir/'insertion_cns_tree.pdf', dpi=300)
-        # fig5 = visualize_tree(tree, sample_colors,
-        #                   indels=insertions, colors=colors,
-        #                   isnv_info=True);
-        # fig5.savefig(tree_dir/'insertion_isnv_tree.pdf', dpi=300)
     else:
         sus_ids = []
     if not Path.isdir(out_dir):

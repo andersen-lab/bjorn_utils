@@ -1,5 +1,5 @@
-# `björn`
-This is the code repository for `bjorn` - a suite of miscellaneous tools that can be used to:
+# `björn_utils`
+This is the code repository for `bjorn_utils` - a suite of miscellaneous tools that can be used to:
 
 * generate information for large-scale genomic surveillance of SARS-CoV-2 sequences. This functionality relies on external tools such as `datafunk`, `minimap2`, and `pandas`. 
 
@@ -9,7 +9,7 @@ This is the code repository for `bjorn` - a suite of miscellaneous tools that ca
 * Install Anaconda: [instructions can be found here](https://docs.anaconda.com/anaconda/install/)
 * Create the `bjorn` environment
 ```bash
-conda env create -f env/linux.yml -n bjorn
+conda env create -f environment.yml -n bjorn_utils
 ```
 * Activate environment
 ```bash
@@ -57,5 +57,5 @@ conda activate bjorn
 ```bash
 bash run_alab_release.sh
 ```
-* `bjorn` assumes the following file structure for the input sequencing data
+* `bjorn_utils` assumes the following file structure for the input sequencing data
 ![Release Structure](figs/alab_release_filestructure.png)
