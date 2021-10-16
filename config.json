@@ -1,0 +1,4 @@
+{
+    "nonconcerning_genes": ["5UTR", "3UTR"],
+    "nonconcerning_mutations": ["ORF8:Q27*"]
+    }
