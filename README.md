@@ -1,8 +1,6 @@
 # `björn_utils`
 This is the code repository for `bjorn_utils` - a suite of miscellaneous tools that can be used to:
 
-* generate information for large-scale genomic surveillance of SARS-CoV-2 sequences. This functionality relies on external tools such as `datafunk`, `minimap2`, and `pandas`. 
-
 * prepare results and data files from SARS-CoV-2 sequencing analysis for release to public databases such as GISAID, Google Cloud, and GitHub
 
 ## Installation
