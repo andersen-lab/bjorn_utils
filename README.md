@@ -13,7 +13,7 @@ conda env create -f environment.yml -n bjorn_utils
 ```
 * Activate environment
 ```bash
-conda activate bjorn
+conda activate bjorn_utils
 ```
 * Install datafunk (inside the activated environment): [instructions (ensure environment is activated during installation)](https://github.com/cov-ert/datafunk)
 
