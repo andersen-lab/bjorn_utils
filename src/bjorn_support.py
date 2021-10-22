@@ -5,10 +5,8 @@ import subprocess
 import math
 from collections import defaultdict
 import gzip
-from path import Path
-import numpy as np
 import pandas as pd
-from Bio import Seq, SeqIO, AlignIO, Phylo, Align
+from Bio import SeqIO, AlignIO, Align
 
 
 

@@ -2,12 +2,10 @@
 Use these utils to prepare sequences for ncbi upload, and ncbi_batch_push to actually upload them
 """
 
-import datetime
 import glob
 import json
 import os
-import shutil
-from typing import Collection, Dict, List, Tuple
+from typing import Tuple
 
 import pandas as pd
 
