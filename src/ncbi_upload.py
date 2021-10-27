@@ -193,6 +193,22 @@ def _convert_str_date_to_timestamp(text: pd.Series, collection_date: pd.Series) 
         
     return list_of_vaccine_dates, vaccine
 
+def map_ids_to_metadata(mapped_metadata: pd.DataFrame, repo_metadata: pd.DataFrame) -> pd.DataFrame:
+    """
+    Map back the ids from biosample, SRA, and genbank to the metadata file from our genomics repo
+    Takes note of what sequences already have ids and what are yet to be updated
+    Takes the converted data from convert_upload_status and adds in the data from genbank
+    Also maps back this data to the in the hcov-19-genomics repo
+    """
+    pass
+
+def get_repo_metadata() -> pd.DataFrame:
+    """
+    get the repo metadata
+    see what sequences have already been mapped
+    for those that haven't been mapped, see if we can upload the bam files and sequences for those
+    """
+    pass
 
 if __name__ == "__main__":
     # get the latest metadata and merge
