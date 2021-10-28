@@ -6,10 +6,12 @@ dependencies:
   - black
   - isort
   - mypy
+  - numpy
   - pandas
   - pip==21.1.3
   - pip:
     - gspread
+    - more-itertools
 
 # add this back once we get bjorn as a module
 # git+https://github.com/andersen-lab/bjorn.git
