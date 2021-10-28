@@ -8,9 +8,6 @@ separate package elements
 
 import os
 import sys
-import subprocess
-from typing import List
-
 
 def concat_fastas(file_1: str, file_2: str, combined_aligned_fasta: str) -> None:
     """
