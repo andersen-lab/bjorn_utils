@@ -1,15 +1,13 @@
-import os
 import gc
 import math
 import re
-import gzip
 import numpy as np
 import pandas as pd
 
 from typing import Tuple
 
 import more_itertools as mit
-from Bio import Seq, SeqIO, AlignIO, Phylo, Align
+from Bio import Seq, SeqIO, Align
 from bjorn_support import map_gene_to_pos
 from mappings import GENE2POS
 
