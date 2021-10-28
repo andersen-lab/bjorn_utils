@@ -8,6 +8,7 @@ dependencies:
   - mypy
   - pandas
   - pip==21.1.3
+  - path
   - pip:
     - gspread
 

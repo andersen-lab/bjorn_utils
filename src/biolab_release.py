@@ -9,6 +9,18 @@ import bjorn_support as bs
 import mutations as bm
 import json
 
+def adjust_string_order(data: pd.DataFrame, column: str = "samples") -> pd.DataFrame:
+    """
+    Takes the input dataframe and returns one where a particular column
+    has had the items reordered into alpha order and separated more
+    obviously
+    """
+    try:
+        alpha_lists = ["; ".join(sorted(item.split(","))) for item in data[column].to_list()]
+        data[column] = pd.Series(alpha_lists)
+        return data
+    except KeyError:
+        return data
 
 if __name__=="__main__":
     with open('biolab_config.json', 'r') as f:
@@ -107,14 +119,14 @@ if __name__=="__main__":
                                         # meta_fp=meta_fp, 
                                         patient_zero=patient_zero, 
                                         min_ins_len=1)
-    insertions["samples"] = pd.Series(", ".join(sorted(item)) for item in insertions["samples"].str.split(","))
+    insertions = adjust_string_order(insertions)
     # save insertion results to file
     insertions.to_csv(out_dir/'insertions.csv', index=False)
     # identify substitution mutations
     substitutions = bm.identify_replacements(msa_data,
                                 # meta_fp=meta_fp,
                                 patient_zero=patient_zero)
-    substitutions["samples"] = pd.Series(", ".join(sorted(item)) for item in substitutions["samples"].str.split(","))
+    substitutions = adjust_string_order(substitutions)
     # save substitution results to file
     substitutions.to_csv(out_dir/'substitutions.csv', index=False)
     # identify deletions
@@ -122,7 +134,7 @@ if __name__=="__main__":
                                     # meta_fp=meta_fp,
                                     patient_zero=patient_zero,
                                     min_del_len=1)
-    deletions["samples"] = pd.Series(", ".join(sorted(item)) for item in deletions["samples"].str.split(","))
+    deletions = adjust_string_order(deletions)
     # save deletion results to file
     deletions.to_csv(out_dir/'deletions.csv', index=False)
     # identify samples with suspicious INDELs and/or substitutions
@@ -131,7 +143,7 @@ if __name__=="__main__":
                                                                         pd.DataFrame(),
                                                                         nonconcerning_genes,
                                                                         nonconcerning_mutations)
-    sus_muts["samples"] = pd.Series(", ".join(sorted(item)) for item in sus_muts["samples"].str.split(","))
+    sus_muts = adjust_string_order(sus_muts)
     sus_muts.to_csv(out_dir/'suspicious_mutations.csv', index=False)
     print(msa_fp)
     print(f"Transferring metadata from Windows to Linux subsystem")
