@@ -28,5 +28,28 @@
         "sequence_uploaded": "sequence_uploaded",
         "bam_uploaded": "bam_uploaded", 
         "wastewater": "wastewater"
+    },
+    "gisaid": {
+        "FASTA filename": "fn", 
+        "Virus name": "covv_virus_name", 
+        "Type": "covv_type", 
+        "Passage details/history": "covv_passage",
+        "Collection date": "covv_collection_date", 
+        "Location": "covv_location", 
+        "Additional location information": "covv_add_location",
+        "Host": "covv_host", 
+        "Additional host information": "covv_add_host_info", 
+        "Specimen source": "covv_specimen", 
+        "Outbreak": "covv_outbreak", 
+        "Last vaccinated": "covv_last_vaccinated",
+        "Treatment": "covv_treatment", 
+        "Sequencing technology": "covv_seq_technology", 
+        "Originating lab": "covv_orig_lab", 
+        "Address": "covv_orig_lab_addr", 
+        "Sample ID given by the sample provider": "covv_provider_sample_id",
+        "Submitting lab": "covv_subm_lab", 
+        "Address.1": "covv_subm_lab_addr",
+        "Sample ID given by the submitting laboratory": "covv_subm_sample_id", 
+        "Authors": "covv_authors"
     }
 }

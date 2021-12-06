@@ -210,6 +210,13 @@ def get_repo_metadata() -> pd.DataFrame:
     """
     pass
 
+def get_ncbi_status() -> pd.DataFrame:
+    """
+    Get the status of SRA, Biosample, and Genbank uploads to NCBI
+    Use these ids to map back to the metadata file in the HCoV-19-Genomics Repo
+    """
+    pass
+
 if __name__ == "__main__":
     # get the latest metadata and merge
     repo_metadata_path = "/Users/karthikramesh/src/HCoV-19-Genomics/metadata.csv"
