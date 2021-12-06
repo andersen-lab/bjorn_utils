@@ -12,6 +12,7 @@ import bjorn_support as bs
 import mutations as bm
 import json
 
+from gsheet_interact import gisaid_interactor
 
 def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     """Generate GISAID metadata for newly released samples"""
@@ -289,9 +290,8 @@ if __name__=="__main__":
     consensus_df = consensus_df[(consensus_df['sample_id'].str.contains('SEARCH'))]
     # merge consensus and bam filepaths for each sample ID
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
-    #TODO: Make this download the latest version directly from google
     # load sample sheet data (GISAID) - make sure to download most recent one
-    seqsum = pd.read_csv(sample_sheet_fpath)
+    seqsum = gisaid_interactor("../bjorn.ini")
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
