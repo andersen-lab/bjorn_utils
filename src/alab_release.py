@@ -289,11 +289,6 @@ if __name__=="__main__":
                         default=1,
                         help="Number of cpus to use")
 
-    parser.add_argument("-s", "--sample-sheet",
-                        type=str,
-                        required=True,
-                        help="Sample sheet to use. Please make sure it is the most recent")
-
     parser.add_argument("-a", "--analysis-folder",
                         type=str,
                         required=True,
@@ -318,8 +313,6 @@ if __name__=="__main__":
     out_dir = Path(args.out_dir)
     # number of cores to use
     num_cpus = args.cpus
-    # file path to samples sheet (make sure it is the most recent)
-    sample_sheet_fpath = args.sample_sheet
     # path to analysis results
     analysis_fpath = args.analysis_folder
     # file path to metadata of samples that have already been released
@@ -337,7 +330,6 @@ if __name__=="__main__":
     print(f"""User Specified Parameters:
     Dry run: {dry_run}.
     Include BAMS: {include_bams}.
-    Reading release summary file from {sample_sheet_fpath}.
     Reading repository metadata from {released_samples_fpath}.
     Searching analysis folder {analysis_fpath}.
     """
