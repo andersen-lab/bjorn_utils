@@ -27,3 +27,5 @@ def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/gisaid_uploader.log",
     df = pd.DataFrame(list(zip(column_2, column_1)), columns =['gisaid_accession', 'fasta_hdr'])
     # read metadata file
     metadata = pd.read_csv(metadata_path)
+    #TODO: Need to understand exactly what is being done to merge this data, seems more complex than copy paste
+    pass
