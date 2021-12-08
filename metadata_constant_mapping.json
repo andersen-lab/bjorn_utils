@@ -11,7 +11,6 @@
     "normal": {
         "bioproject_accession": "PRJNA612578",
         "organism": "SARS-CoV-2",
-        "host": "Homo Sapiens",
         "host_disease": "COVID-19"
     }
 }

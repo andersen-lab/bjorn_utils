@@ -5,13 +5,13 @@ Use these utils to prepare sequences for ncbi upload, and ncbi_batch_push to act
 import glob
 import json
 import os
-from typing import Tuple
+from typing import List, Tuple
 
 import pandas as pd
 
 from gsheet_interact import gisaid_interactor
 
-def merge_metadata(repo_metadata_path: str, online_metadata_config: str, online_metadata_old_path: str) -> pd.DataFrame:
+def merge_metadata(repo_metadata_path: str, online_metadata_config: str) -> pd.DataFrame:
     """
     Takes the online metadata and remerges it with that published in the HCoV-19 repo
     to create a combined file with all needed columns
@@ -19,14 +19,14 @@ def merge_metadata(repo_metadata_path: str, online_metadata_config: str, online_
     # load the repo metadata
     repo_metadata_df = pd.read_csv(repo_metadata_path)
 
-    # load the old online metadata file
-    online_metadata_old_df = pd.read_csv(online_metadata_old_path)
+    # new_file
+    new_online_metadata = gisaid_interactor(online_metadata_config, 'current').rename(columns={"Original sampleID": "Sample ID"})
 
-    # load the new online metadata file
-    online_metadata_new_df = gisaid_interactor(online_metadata_config).rename(columns={"Original sampleID": "Sample ID"})
-
+    # old_file
+    old_online_metadata = gisaid_interactor(online_metadata_config, 'old')
+    
     # combine the old and new online metadata after renaming a column
-    combined_online_metadata = pd.concat([online_metadata_old_df, online_metadata_new_df])
+    combined_online_metadata = pd.concat([new_online_metadata, old_online_metadata])
 
     # merge the online and repo based metadata
     merged_combined_metadata = repo_metadata_df.merge(combined_online_metadata, how="left", left_on="fasta_hdr", right_on="Virus name")
@@ -45,18 +45,12 @@ def generate_alternative_id(metadata: pd.DataFrame) -> pd.DataFrame:
 
     return pd.concat([missing_alternative_id, has_alternative_id])
 
-def generate_metadata_status(sra_submissions_path: str, genbank_submissions_path: str, wastewater_path: str, consensus_folder_path: str) -> pd.DataFrame:
+def generate_metadata_status(sra_submissions_path: str, genbank_submissions_path: str, wastewater_samples_list: List[str], consensus_folder_path: str) -> pd.DataFrame:
     """
     Takes the current sra, genbank submissions and then the consensus folder path to assess the status of uploading
     files to various locations
     """
     #TODO: Make this pull the current submissions in an automated way from ncbi
-
-    # load wastewater files
-    with open(wastewater_path, "r") as infile:
-        lines = infile.readlines()
-        wastewater_samples_list = [line.split("/")[1].split(".")[0] for line in lines]
-
     # load sra submissions
     uploaded_bam_files = pd.read_csv(sra_submissions_path)["Library Name"].to_list()
 
@@ -150,7 +144,6 @@ def recover_vaccine_date(metadata: pd.DataFrame) -> pd.DataFrame:
     needs_to_be_vaccine_timestamped["date_of_sars_cov_2_vaccination"] = needs_to_be_vaccine_timestamped["date_of_sars_cov_2_vaccination"].dt.strftime('%Y-%m-%d')
     does_not_need_to_be_vaccine_timestamped = metadata[~metadata["last_vaccinated_raw"].str.contains("~", na=False)]
     timestamped_metadata = pd.concat([needs_to_be_vaccine_timestamped, does_not_need_to_be_vaccine_timestamped])
-    #timestamped_metadata = timestamped_metadata.drop(columns=["last_vaccinated_raw"])
     return timestamped_metadata
 
 def _convert_str_date_to_timestamp(text: pd.Series, collection_date: pd.Series) -> Tuple[pd.Series, pd.Series]:
@@ -193,36 +186,11 @@ def _convert_str_date_to_timestamp(text: pd.Series, collection_date: pd.Series) 
         
     return list_of_vaccine_dates, vaccine
 
-def map_ids_to_metadata(mapped_metadata: pd.DataFrame, repo_metadata: pd.DataFrame) -> pd.DataFrame:
-    """
-    Map back the ids from biosample, SRA, and genbank to the metadata file from our genomics repo
-    Takes note of what sequences already have ids and what are yet to be updated
-    Takes the converted data from convert_upload_status and adds in the data from genbank
-    Also maps back this data to the in the hcov-19-genomics repo
-    """
-    pass
-
-def get_repo_metadata() -> pd.DataFrame:
-    """
-    get the repo metadata
-    see what sequences have already been mapped
-    for those that haven't been mapped, see if we can upload the bam files and sequences for those
-    """
-    pass
-
-def get_ncbi_status() -> pd.DataFrame:
-    """
-    Get the status of SRA, Biosample, and Genbank uploads to NCBI
-    Use these ids to map back to the metadata file in the HCoV-19-Genomics Repo
-    """
-    pass
-
 if __name__ == "__main__":
     # get the latest metadata and merge
     repo_metadata_path = "/Users/karthikramesh/src/HCoV-19-Genomics/metadata.csv"
     online_metadata_config = "bjorn.ini"
-    online_metadata_old_path = "data/ncbi_upload/COVID_sequencing_summary [March 2020 - March 2021] - GISAID.csv"
-    merged_combined_metadata = merge_metadata(repo_metadata_path, online_metadata_config, online_metadata_old_path)
+    merged_combined_metadata = merge_metadata(repo_metadata_path, online_metadata_config)
 
     # generate the status info for these sequences
 
