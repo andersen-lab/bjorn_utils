@@ -1,88 +1,28 @@
 import pandas as pd
-import matplotlib.pylab as plt
-from matplotlib.lines import Line2D
-import matplotlib.colors as mcolors
-import matplotlib.gridspec as gridspec
 from path import Path
 from shutil import copy, move
-from Bio import SeqIO, AlignIO, Phylo
+from Bio import SeqIO
 import argparse
 import glob
 import subprocess
 from multiprocessing import Pool
 from itertools import repeat
 import os
-from datetime import datetime as dt
 import bjorn_support as bs
 import mutations as bm
-# from bjorn_support import concat_fasta, align_fasta, compute_tree, map_gene_to_pos, load_fasta
-# from mutations import identify_replacements, identify_deletions, identify_insertions
-from onion_trees import load_tree, visualize_tree, get_indel2color, get_sample2color
-import data as bd
 import json
 
-
-## FUNCTION DEFINTIONS
-def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
-    biosample_paths = glob.glob(f"{sra_dir}/*.txt")
-    if biosample_paths:
-        biosample_df = pd.concat((pd.read_csv(f, sep='\t') for f in biosample_paths))
-        biosample_df["sample_id"] = biosample_df["Sample Name"].apply(lambda x: "".join(x.split("-")[:2]))
-        bam_files = ans.loc[~ans['PATH_y'].isna()][['sample_id', 'PATH_y']].rename(columns={'PATH_y': 'file_name'})
-        sra_merged = pd.merge(biosample_df, bam_files, on="sample_id")
-        sra_merged[["Accession", "Sample Name", "file_name"]].to_csv(sra_dir/"sra_metadata.csv", index=False)
-    return f"SRA metadata saved in {sra_dir/'sra_metadata.csv'}"
-
-
-def assemble_genbank_release(cns_seqs: list, df: pd.DataFrame, meta_cols: list, genbank_dir: Path):
-    # create directory for genbank release
-    if not Path.isdir(genbank_dir):
-        Path.mkdir(genbank_dir);
-    authors = {}
-    # group samples by author
-    for ctr, (n, grp) in enumerate(df.groupby('authors')):
-        authors[ctr+1] = n
-        # generate sample metadata
-        genbank_meta = create_genbank_meta(grp, meta_cols)
-        genbank_meta.to_csv(genbank_dir/f'genbank_metadata_{ctr+1}.tsv', sep='\t', index=False)
-        # fetch consensus sequences of those samples
-        recs = [i for i in cns_seqs if i.name in genbank_meta['Sequence_ID'].tolist()]
-        SeqIO.write(recs, genbank_dir/f'genbank_release_{ctr+1}.fa', 'fasta')
-    # write mapping of index to author for later reference
-    (pd.DataFrame.from_dict(authors, orient='index')
-       .rename(columns={0: 'authors'})
-       .to_csv(genbank_dir/'authors.tsv', sep='\t'))
-    return f"Genbank data release saved in {genbank_dir}"
-
-
-def create_genbank_meta(df: pd.DataFrame, meta_cols: list) -> pd.DataFrame:
-    genbank_meta = df[meta_cols].copy()
-    genbank_meta['country'] = genbank_meta['location'].apply(lambda x: x.split('/')[0])
-    genbank_meta['isolate'] = genbank_meta['Virus name'].str.replace('hCoV-19', 'SARS-CoV-2/human')
-    genbank_meta['host'] = genbank_meta['Host'].str.replace('Human', 'Homo Sapiens')
-    genbank_meta.rename(columns={'Virus name': 'Sequence_ID', 'collection_date': 'collection-date',
-                                 'Specimen source': 'isolation-source'}, inplace=True)
-    genbank_meta.loc[genbank_meta['country']=='MEX', 'country'] = 'Mexico'
-    return genbank_meta[['Sequence_ID', 'isolate', 'country',
-                         'collection-date', 'host', 'isolation-source']]
-
-
-def create_github_meta(new_meta_df: pd.DataFrame, old_meta_filepath: str, meta_cols: list):
-    """Generate Github metadata with updated information about newly released samples"""
-    old_metadata = pd.read_csv(old_meta_filepath)
-    new_metadata = pd.concat([old_metadata, new_meta_df.loc[:, meta_cols]])
-    new_metadata.to_csv(out_dir/'metadata.csv', index=False)
-    return new_metadata
-
+from gsheet_interact import gisaid_interactor
 
 def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     """Generate GISAID metadata for newly released samples"""
-    na_cols = ['Gender','Patient age','Patient status']
+    na_cols = ['covv_gender','covv_patient_age','covv_patient_status', 'covv_sampling_strategy', "covv_comment", "comment_type"]
     new_meta_df.loc[:, na_cols] = new_meta_df[na_cols].fillna('N/A')
-    new_meta_df['Coverage'] = new_meta_df['avg_depth'].copy()
+    new_meta_df['covv_coverage'] = new_meta_df['avg_depth'].copy()
     new_meta_df.drop(columns=['avg_depth'], inplace=True)
-    new_meta_df['Assembly method'] = 'iVar 1.3.1'
-    new_meta_df['Submitter'] = 'gkarthik'
+    new_meta_df['covv_assembly_method'] = 'iVar 1.3.1'
+    new_meta_df['submitter'] = 'mzeller'
+    # note that an added benefit of this method is that it should reorder the columns for us
     new_meta_df[meta_cols].to_csv(out_dir/'gisaid_metadata.csv', index=False)
     return new_meta_df
 
@@ -110,20 +50,10 @@ def process_coverage_sample_ids(x):
         x = x[x.find("SEARCH"):]
     query = x.split('/')
     if len(query) == 1:
-        # query = fp.basename().split('_')[0].split('-')
         return ''.join(x.split("_")[0].split('-')[:2]) # Format could be SEARCH-xxxx-LOC or SEARCH-xxxx
     else:
         start_idx = x.find('SEARCH')
         return x[start_idx:start_idx+10] # SEARCHxxxx
-
-
-def compress_files(filepaths: list, destination='/home/al/tmp2/fa/samples.tar.gz'):
-    "Utility function to compress list of files into a single .tar.gz file"
-    with tarfile.open(destination, "w:gz") as tar:
-        for f in filepaths:
-            tar.add(f)
-    return 0
-
 
 def retransfer_files(filepaths: pd.DataFrame, destination: str, suspicious_sample_ids: list, include_bams: bool=False, ncpus: int=1):
     """Utility function to separate the consensus and BAM files of samples containing suspicious 
@@ -232,24 +162,16 @@ def process_id(x):
     "Utility function to process sample IDs to fix inconsistencies in the format"
     return ''.join(x.split('-')[:2])
 
-## MAIN
-
 if __name__=="__main__":
     # Input Parameters
-    # COLUMNS TO INCLUDE IN GITHUB METADATA
-    git_meta_cols = ["ID", "collection_date", "location", "percent_coverage_cds", "Coverage", "authors", "originating_lab", "fasta_hdr"]
     # COLUMNS TO INCLUDE IN GISAID METADATA
-    gisaid_meta_cols = ['Submitter',
-                   'FASTA filename', 'Virus name', 'Type', 'Passage details/history',
-                   'Collection date', 'location', 'Additional location information',
-                   'Host', 'Additional host information', 'Gender', 'Patient age',
-                   'Patient status', 'Specimen source', 'Outbreak', 'Last vaccinated',
-                   'Treatment', 'Sequencing technology', 'Assembly method', 'Coverage',
-                   'originating_lab', 'Address', 'Sample ID given by the sample provider',
-                   'Submitting lab', 'Address.1',
-                   'Sample ID given by the submitting laboratory', 'authors']
-    # COLUMNS TO INCLUDE IN GITHUB METADATA
-    genbank_meta_cols = ['Sample ID', 'ID', 'Virus name', 'location', 'Specimen source', 'collection_date', 'Host']
+    gisaid_meta_cols = [
+        'submitter', 'fn', 'covv_virus_name', 'covv_type', 'covv_passage', 'covv_collection_date', 
+        'covv_location', 'covv_add_location','covv_host', 'covv_add_host_info', 'covv_sampling_strategy', 'covv_gender', 
+        'covv_patient_age', 'covv_patient_status', 'covv_specimen', 'covv_outbreak', 'covv_last_vaccinated', 'covv_treatment', 
+        'covv_seq_technology', 'covv_assembly_method', 'covv_coverage', 'covv_orig_lab', 'covv_orig_lab_addr', 'covv_provider_sample_id', 
+        'covv_subm_lab', 'covv_subm_lab_addr', 'covv_subm_sample_id', 'covv_authors', 'covv_comment', 'comment_type'
+        ]
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-d', "--not-dry-run", action='store_false', help="Dry run. Default: True")
@@ -324,13 +246,6 @@ if __name__=="__main__":
     # Whether run is dry
     dry_run = args.not_dry_run
 
-    # # Test
-    # out_dir = "/home/gk/southpark/2020-11-21_release"
-    # sample_sheet_fpath = "/home/gk/code/hCoV19/release_summary_csv/2020-11-20_seq_summary.csv"
-    # analysis_fpath = "/home/gk/analysis/"
-    # released_samples_fpath = "/home/gk/analysis/hcov-19-genomics/metadata.csv"
-    # dry_run = True
-
     print(f"""User Specified Parameters:
     Dry run: {dry_run}.
     Include BAMS: {include_bams}.
@@ -362,7 +277,6 @@ if __name__=="__main__":
                                      tech='illumina',
                                      generalised=True,
                                      return_type='list')
-    # consensus_filepaths = glob.glob(f"{analysis_fpath}/**/consensus_sequences/illumina/*.fa")
     consensus_filepaths = [Path(fp) for fp in consensus_filepaths]
     # consolidate sample ID format
     consensus_ids = get_ids(consensus_filepaths)
@@ -377,7 +291,7 @@ if __name__=="__main__":
     # merge consensus and bam filepaths for each sample ID
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
     # load sample sheet data (GISAID) - make sure to download most recent one
-    seqsum = pd.read_csv(sample_sheet_fpath)
+    seqsum = gisaid_interactor("../bjorn.ini")
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
@@ -401,12 +315,11 @@ if __name__=="__main__":
     # ## Make sure to remove any samples that have already been uploaded to github (just an extra safety step)
     # load metadata.csv from github repo, then clean up
     meta_df = pd.read_csv(released_samples_fpath)
-    meta_df = meta_df[meta_df['ID'].str.contains('SEARCH')]
+    meta_df = meta_df[meta_df['covv_subm_sample_id'].str.contains('SEARCH')]
     # consolidate sample ID format
-    meta_df.loc[:, 'sample_id'] = meta_df['ID'].apply(process_id)
-    # meta_df['sample_id']
+    meta_df.loc[:, 'sample_id'] = meta_df['covv_subm_sample_id'].apply(process_id)
     # get IDs of samples that have already been released
-    released_seqs = meta_df['sample_id'].unique()
+    released_seqs = meta_df['covv_subm_sample_id'].unique()
     # filter out released samples from all the samples we got
     final_result = sequence_results[~sequence_results['sample_id'].isin(released_seqs)]
     # final_result = sequence_results.copy()
@@ -417,12 +330,9 @@ if __name__=="__main__":
                                      tech='illumina/reports',
                                      generalised=True,
                                      return_type='list')
-    # cov_filepaths = glob.glob("{}/**/trimmed_bams/illumina/reports/*.tsv".format(analysis_fpath))
-    # get_ipython().getoutput("find {analysis_fpath} -type f -path '*trimmed_bams/illumina/reports*' -name '*.tsv'")
     cov_filepaths = [Path(fp) for fp in cov_filepaths]
     # read coverage data and clean it up
     cov_df = pd.concat((pd.read_csv(f, sep='\t').assign(path=f) for f in cov_filepaths))
-    print(cov_df[cov_df['SAMPLE'].isna()]["path"].tolist())
     cov_df.loc[:,'sample_id'] = cov_df['SAMPLE'].apply(process_coverage_sample_ids)
     cov_df.loc[:,'date'] = cov_df['path'].apply(lambda x: ''.join(x.split('/')[4].split('.')[:3]))
     cov_df = (cov_df.sort_values('date')
@@ -463,35 +373,19 @@ if __name__=="__main__":
         # load concatenated sequences
         cns_seqs = SeqIO.parse(msa_dir/out_dir.basename()+'.fa', 'fasta')
         cns_seqs = list(cns_seqs)
-        # generate files containing metadata for Github, GISAID, GenBank
-        # GitHub metadata for all samples (out_dir/metadata.csv)
-        git_meta_df = create_github_meta(ans.copy(), released_samples_fpath, git_meta_cols)
+        # maps columns of ans to new gisaid format
+        with open("../metadata_column_mapping.json", 'r') as infile:
+            column_mapping = json.load(infile)['gisaid']
+        ans_converted_columns = pd.DataFrame()
+        for key in column_mapping:
+            ans_converted_columns[key] = ans[column_mapping[key]]
         # GISAID metadata for all samples (out_dir/gisaid_metadata.csv)
-        gisaid_meta_df = create_gisaid_meta(ans.copy(), gisaid_meta_cols)
-        # assemble_genbank_release(cns_seqs, ans, genbank_meta_cols, out_dir/'genbank')
-        # sra_dir = out_dir/'sra'
-        # if not Path.isdir(sra_dir):
-        #     Path.mkdir(sra_dir);
-        # input(f"\n Have you received the BioSample.txt files and placed them inside {sra_dir}? \n Press Enter to continue...")
-        # create_sra_meta(ans, sra_dir)
+        gisaid_meta_df = create_gisaid_meta(ans_converted_columns.copy(), gisaid_meta_cols)
         # generate file containing deletions found
         # generate multiple sequence alignment
         msa_fp = seqs_fp.split('.')[0] + '_aligned.fa'
         if not Path.isfile(Path(msa_fp)):
             msa_fp = bs.align_fasta(seqs_fp, msa_fp, num_cpus=num_cpus);
-        # compute ML tree
-        # tree_dir = out_dir/'trees'
-        # if not Path.isdir(tree_dir):
-        #     Path.mkdir(tree_dir);
-        # tree_fp = msa_fp + '.treefile'
-        # if not Path.isfile(Path(tree_fp)):
-        #     tree_fp = compute_tree(msa_fp, num_cpus=num_cpus)
-        # tree = load_tree(tree_fp, patient_zero)
-        # # Plot and save basic tree
-        # fig1 = visualize_tree(tree)
-        # fig1.savefig(tree_dir/'basic_tree.pdf')
-        # PLOT AND SAVE INDEL TREES
-        # colors = list(mcolors.TABLEAU_COLORS.keys())
         # path to new github metadata
         meta_fp = out_dir/'metadata.csv'
         # load multiple sequence alignment
@@ -531,46 +425,18 @@ if __name__=="__main__":
                                                                           nonconcerning_mutations)
         sus_muts.to_csv(out_dir/'suspicious_mutations.csv', index=False)
         # collect metadata for white-listed samples
-        gisaid_white = gisaid_meta_df[~gisaid_meta_df['Virus name'].isin(sus_ids)]
-        git_white = git_meta_df[~git_meta_df['fasta_hdr'].isin(sus_ids)]
+        gisaid_white = gisaid_meta_df[~gisaid_meta_df['covv_virus_name'].isin(sus_ids)]
         # collect metadata for samples that require manual inspection
-        gisaid_inspect = gisaid_meta_df[gisaid_meta_df['Virus name'].isin(sus_ids)]
-        git_inspect = git_meta_df[git_meta_df['fasta_hdr'].isin(sus_ids)]
+        gisaid_inspect = gisaid_meta_df[gisaid_meta_df['covv_virus_name'].isin(sus_ids)]
         # save them to files
         gisaid_white.to_csv(out_dir/'clean_gisaid_meta.csv', index=False)
         gisaid_inspect.to_csv(out_dir/'inspect_gisaid_meta.csv', index=False)
-        git_white.to_csv(out_dir/'clean_metadata.csv', index=False)
-        git_inspect.to_csv(out_dir/'inspect_metadata.csv', index=False)
         # re-transfer FASTA and BAM files of samples into either white-listed or inspection-listed folders
         retransfer_files(ans.copy(), out_dir, sus_ids, include_bams=include_bams, ncpus=num_cpus)
         bs.separate_alignments(bs.load_fasta(msa_fp, is_aligned=True), sus_ids=sus_ids, 
                                              out_dir=msa_dir, filename=seqs_fp.split('.')[0])
         # generate compressed report containing main results
         bs.generate_release_report(out_dir)
-        # print(sus_ids)
-        # print(nonconcerning_mutations)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # deletions = deletions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(deletions, colors)
-        # sample_colors = get_sample2color(deletions, colors)
-        # fig2 = visualize_tree(tree, sample_colors,
-        #            indels=deletions, colors=colors);
-        # fig2.savefig(tree_dir/'deletion_cns_tree.pdf', dpi=300)
-        # fig3 = visualize_tree(tree, sample_colors,
-        #                   indels=deletions, colors=colors,
-        #                   isnv_info=True);
-        # fig3.savefig(tree_dir/'deletion_isnv_tree.pdf', dpi=300)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # insertions = insertions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(insertions, colors)
-        # sample_colors = get_sample2color(insertions, colors)
-        # fig4 = visualize_tree(tree, sample_colors,
-        #            indels=insertions, colors=colors);
-        # fig4.savefig(tree_dir/'insertion_cns_tree.pdf', dpi=300)
-        # fig5 = visualize_tree(tree, sample_colors,
-        #                   indels=insertions, colors=colors,
-        #                   isnv_info=True);
-        # fig5.savefig(tree_dir/'insertion_isnv_tree.pdf', dpi=300)
     else:
         sus_ids = []
     if not Path.isdir(out_dir):

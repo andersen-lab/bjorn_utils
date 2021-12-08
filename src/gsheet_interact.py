@@ -17,22 +17,30 @@ def _get_config(config_file_path: str) -> Dict[str, str]:
     config = ConfigParser()
     config.read(config_file_path)
     return {
-        "gisaid_key": config["gsheets"]["gisaid_key"],
+        "current_key": config["gsheets"]["current_key"],
+        "old_key": config["gsheets"]["old_key"],
         "gisaid_wksht_num": int(config["gsheets"]["gisaid_wksht_num"]),
         "gsheet_key_path": config["gsheets"]["gsheet_key_path"],
     }
 
 
-def gisaid_interactor(config_file_path: str) -> pd.DataFrame:
+def gisaid_interactor(config_file_path: str, version: str = "current") -> pd.DataFrame:
     """
     Interact with a metadata file and get the appropriate results
     Split this out into separate file when we're done
     """
     config = _get_config(config_file_path)
-    metadata = _get_gsheet(
-        config["gisaid_key"], config["gisaid_wksht_num"], config["gsheet_key_path"]
-    )
-    return metadata
+    if version == "current":
+        return _get_gsheet(
+            config["current_key"], config["gisaid_wksht_num"], config["gsheet_key_path"]
+        )
+    elif version == "old":
+        return _get_gsheet(
+            config["old_key"], config["gisaid_wksht_num"], config["gsheet_key_path"]
+        )
+    #TODO: Fine tune this error
+    else:
+        raise ValueError
 
 
 def _get_gsheet(
