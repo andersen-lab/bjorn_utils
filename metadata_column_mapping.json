@@ -47,7 +47,7 @@
         "Address": "covv_orig_lab_addr", 
         "Sample ID given by the sample provider": "covv_provider_sample_id",
         "Submitting lab": "covv_subm_lab", 
-        "Address.1": "covv_subm_lab_addr",
+        "Submitting Lab Address": "covv_subm_lab_addr",
         "Sample ID given by the submitting laboratory": "covv_subm_sample_id", 
         "authors": "covv_authors"
     }

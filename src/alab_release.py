@@ -249,7 +249,7 @@ if __name__=="__main__":
                    'Patient status', 'Specimen source', 'Outbreak', 'Last vaccinated',
                    'Treatment', 'Sequencing technology', 'Assembly method', 'Coverage',
                    'originating_lab', 'Address', 'Sample ID given by the sample provider',
-                   'Submitting lab', 'Address.1',
+                   'Submitting lab', 'Submitting Lab Address',
                    'Sample ID given by the submitting laboratory', 'authors']
     # COLUMNS TO INCLUDE IN GITHUB METADATA
     genbank_meta_cols = ['Sample ID', 'ID', 'Virus name', 'location', 'Specimen source', 'collection_date', 'Host']
