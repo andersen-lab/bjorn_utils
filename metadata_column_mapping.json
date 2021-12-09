@@ -43,7 +43,7 @@
         "Treatment": "covv_treatment", 
         "Sequencing technology": "covv_seq_technology",
         "avg_depth": "covv_coverage",
-        "originating lab": "covv_orig_lab", 
+        "originating_lab": "covv_orig_lab", 
         "Address": "covv_orig_lab_addr", 
         "Sample ID given by the sample provider": "covv_provider_sample_id",
         "Submitting lab": "covv_subm_lab", 
