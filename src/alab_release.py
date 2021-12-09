@@ -77,13 +77,13 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
         'covv_seq_technology', 'covv_assembly_method', 'covv_coverage', 'covv_orig_lab', 'covv_orig_lab_addr', 'covv_provider_sample_id', 
         'covv_subm_lab', 'covv_subm_lab_addr', 'covv_subm_sample_id', 'covv_authors', 'covv_comment', 'comment_type'
         ]
-    with open("../metadata_column_mapping.json", 'r') as infile:
+    with open("/home/al/code/bjorn_utils/metadata_column_mapping.json", 'r') as infile:
             column_mapping = json.load(infile)['gisaid']
     converted_meta_df = pd.DataFrame()
     for key in column_mapping:
         converted_meta_df[column_mapping[key]] = new_meta_df[key]
     na_cols = ['covv_gender','covv_patient_age','covv_patient_status', 'covv_sampling_strategy', "covv_comment", "comment_type"]
-    converted_meta_df.loc[:, na_cols] = converted_meta_df[na_cols].fillna('N/A')
+    converted_meta_df[na_cols] = "N/A"
     converted_meta_df['covv_assembly_method'] = 'iVar 1.3.1'
     converted_meta_df['submitter'] = 'mzeller'
     converted_meta_df[gisaid_columns_new].to_csv(out_dir/'gisaid_metadata.csv', index=False)
@@ -372,7 +372,7 @@ if __name__=="__main__":
     # merge consensus and bam filepaths for each sample ID
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
     # load sample sheet data (GISAID) - make sure to download most recent one
-    seqsum = gisaid_interactor("../bjorn.ini", 'current')
+    seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
