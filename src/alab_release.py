@@ -380,6 +380,7 @@ if __name__=="__main__":
     seqsum.drop_duplicates(subset=['sample_id'], keep='last', inplace=True)
     seqsum = seqsum[seqsum['New sequences ready for release'] == 'Yes']
     num_seqs_to_release = seqsum['sample_id'].unique().shape[0]
+    print(seqsum)
     # JOIN summary sheet with analysis meta data
     sequence_results = pd.merge(seqsum, analysis_df, on='sample_id', how='inner')
     # compute number of samples with missing consensus and/or bam files
