@@ -27,5 +27,14 @@ def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/gisaid_uploader.log",
     df = pd.DataFrame(list(zip(column_2, column_1)), columns =['gisaid_accession', 'fasta_hdr'])
     # read metadata file
     metadata = pd.read_csv(metadata_path)
-    #TODO: Need to understand exactly what is being done to merge this data, seems more complex than copy paste
-    pass
+    column_order = metadata.columns.to_list()
+    # sort for the metadata where gisaid_id is missing
+    missing_gisaid_id = metadata[metadata["gisaid_accession"].isna()].drop(columns=["gisaid_accession"])
+    not_missing_gisaid_id = metadata[~metadata["gisaid_accession"].isna()]
+    # merge data
+    merged = missing_gisaid_id.merge(df, how='left', on='fasta_hdr')
+    # reset column order and return
+    new_metadata = pd.concat([not_missing_gisaid_id, merged[column_order]])
+    # write new_metadata to disk
+    new_metadata.to_csv(metadata_path, index=False)
+    return
