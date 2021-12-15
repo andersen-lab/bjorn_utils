@@ -43,7 +43,7 @@ def gisaid_interactor(config_file_path: str, version: str = "current") -> pd.Dat
     else:
         raise ValueError
 
-def zipcode_interactor(config_file_path: str) pd.DataFrame:
+def zipcode_interactor(config_file_path: str) -> pd.DataFrame:
     """
     Gets all zipcode data for the samples and returns them
     """
@@ -52,7 +52,7 @@ def zipcode_interactor(config_file_path: str) pd.DataFrame:
     old_zipcode_data = _get_gsheet(config["old_key"], config["zipcode_wksht_num"], config['gsheet_key_path'])[["SEARCH SampleID", "Zipcode"]]
 
     return pd.concat([current_zipcode_data, old_zipcode_data])
-    
+
 def _get_gsheet(
     file_key: str, worksheet_num: int, service_account_json: str
 ) -> pd.DataFrame:
