@@ -319,14 +319,6 @@ if __name__=="__main__":
     released_samples_fpath = args.output_metadata
     # Whether run is dry
     dry_run = args.not_dry_run
-
-    # # Test
-    # out_dir = "/home/gk/southpark/2020-11-21_release"
-    # sample_sheet_fpath = "/home/gk/code/hCoV19/release_summary_csv/2020-11-20_seq_summary.csv"
-    # analysis_fpath = "/home/gk/analysis/"
-    # released_samples_fpath = "/home/gk/analysis/hcov-19-genomics/metadata.csv"
-    # dry_run = True
-
     print(f"""User Specified Parameters:
     Dry run: {dry_run}.
     Include BAMS: {include_bams}.
@@ -380,7 +372,6 @@ if __name__=="__main__":
     seqsum.drop_duplicates(subset=['sample_id'], keep='last', inplace=True)
     seqsum = seqsum[seqsum['New sequences ready for release'] == 'Yes']
     num_seqs_to_release = seqsum['sample_id'].unique().shape[0]
-    print(seqsum)
     # JOIN summary sheet with analysis meta data
     sequence_results = pd.merge(seqsum, analysis_df, on='sample_id', how='inner')
     # compute number of samples with missing consensus and/or bam files
@@ -464,31 +455,10 @@ if __name__=="__main__":
         git_meta_df = create_github_meta(ans.copy(), released_samples_fpath, git_meta_cols)
         # GISAID metadata for all samples (out_dir/gisaid_metadata.csv)
         gisaid_meta_df = create_gisaid_meta(ans.copy(), gisaid_meta_cols)
-        # assemble_genbank_release(cns_seqs, ans, genbank_meta_cols, out_dir/'genbank')
-        # sra_dir = out_dir/'sra'
-        # if not Path.isdir(sra_dir):
-        #     Path.mkdir(sra_dir);
-        # input(f"\n Have you received the BioSample.txt files and placed them inside {sra_dir}? \n Press Enter to continue...")
-        # create_sra_meta(ans, sra_dir)
-        # generate file containing deletions found
         # generate multiple sequence alignment
         msa_fp = seqs_fp.split('.')[0] + '_aligned.fa'
         if not Path.isfile(Path(msa_fp)):
             msa_fp = bs.align_fasta(seqs_fp, msa_fp, num_cpus=num_cpus);
-        # compute ML tree
-        # tree_dir = out_dir/'trees'
-        # if not Path.isdir(tree_dir):
-        #     Path.mkdir(tree_dir);
-        # tree_fp = msa_fp + '.treefile'
-        # if not Path.isfile(Path(tree_fp)):
-        #     tree_fp = compute_tree(msa_fp, num_cpus=num_cpus)
-        # tree = load_tree(tree_fp, patient_zero)
-        # # Plot and save basic tree
-        # fig1 = visualize_tree(tree)
-        # fig1.savefig(tree_dir/'basic_tree.pdf')
-        # PLOT AND SAVE INDEL TREES
-        # colors = list(mcolors.TABLEAU_COLORS.keys())
-        # path to new github metadata
         meta_fp = out_dir/'metadata.csv'
         # load multiple sequence alignment
         msa_data = bs.load_fasta(msa_fp, is_aligned=True)
@@ -543,30 +513,6 @@ if __name__=="__main__":
                                              out_dir=msa_dir, filename=seqs_fp.split('.')[0])
         # generate compressed report containing main results
         bs.generate_release_report(out_dir)
-        # print(sus_ids)
-        # print(nonconcerning_mutations)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # deletions = deletions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(deletions, colors)
-        # sample_colors = get_sample2color(deletions, colors)
-        # fig2 = visualize_tree(tree, sample_colors,
-        #            indels=deletions, colors=colors);
-        # fig2.savefig(tree_dir/'deletion_cns_tree.pdf', dpi=300)
-        # fig3 = visualize_tree(tree, sample_colors,
-        #                   indels=deletions, colors=colors,
-        #                   isnv_info=True);
-        # fig3.savefig(tree_dir/'deletion_isnv_tree.pdf', dpi=300)
-        # plot Phylogenetic tree with top consensus deletions annotated
-        # insertions = insertions.nlargest(len(colors), 'num_samples')
-        # del2color = get_indel2color(insertions, colors)
-        # sample_colors = get_sample2color(insertions, colors)
-        # fig4 = visualize_tree(tree, sample_colors,
-        #            indels=insertions, colors=colors);
-        # fig4.savefig(tree_dir/'insertion_cns_tree.pdf', dpi=300)
-        # fig5 = visualize_tree(tree, sample_colors,
-        #                   indels=insertions, colors=colors,
-        #                   isnv_info=True);
-        # fig5.savefig(tree_dir/'insertion_isnv_tree.pdf', dpi=300)
     else:
         sus_ids = []
     if not Path.isdir(out_dir):

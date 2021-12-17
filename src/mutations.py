@@ -1,17 +1,15 @@
-import os
 import gc
 import math
 import re
-import gzip
 import numpy as np
 import pandas as pd
 
 import more_itertools as mit
-from Bio import Seq, SeqIO, AlignIO, Phylo, Align
+from Bio import Seq, SeqIO, Align
 from bjorn_support import map_gene_to_pos
 import data as bd
 
-
+from typing import Tuple
 
 def identify_samples_with_suspicious_mutations(substitutions: pd.DataFrame, 
                                                deletions: pd.DataFrame, 
@@ -508,7 +506,7 @@ def pad_aligned_sequences(in_fp, out_fp):
     
 
 def process_cns_seqs(cns_data: Align.MultipleSeqAlignment, patient_zero: str,
-                     start_pos: int, end_pos: int) -> (dict, str):
+                     start_pos: int, end_pos: int) -> Tuple[dict, str]:
     """Process aligned consensus sequences to prepare them for identifying deletions. 
     The reference sequence is used to identify insertion positions, 
     which are then removed and position numbers are updated."""

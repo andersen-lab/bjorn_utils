@@ -45,6 +45,8 @@ def generate_alternative_id(metadata: pd.DataFrame) -> pd.DataFrame:
 
     return pd.concat([missing_alternative_id, has_alternative_id])
 
+
+# DEFUNCT - DON"T USE
 def generate_metadata_status(sra_submissions_path: str, genbank_submissions_path: str, wastewater_samples_list: List[str], consensus_folder_path: str) -> pd.DataFrame:
     """
     Takes the current sra, genbank submissions and then the consensus folder path to assess the status of uploading
