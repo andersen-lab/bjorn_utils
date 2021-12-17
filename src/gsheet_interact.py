@@ -21,6 +21,7 @@ def _get_config(config_file_path: str) -> Dict[str, str]:
         "current_key": config["gsheets"]["current_key"],
         "old_key": config["gsheets"]["old_key"],
         "gisaid_wksht_num": int(config["gsheets"]["gisaid_wksht_num"]),
+        "zipcode_wksht_num": int(config["gsheets"]["zipcode_wksht_num"]),
         "gsheet_key_path": config["gsheets"]["gsheet_key_path"],
     }
 
@@ -49,9 +50,7 @@ def zipcode_interactor(config_file_path: str) -> pd.DataFrame:
     """
     config = _get_config(config_file_path)
     current_zipcode_data = _get_gsheet(config["current_key"], config["zipcode_wksht_num"], config['gsheet_key_path'])[["SEARCH SampleID", "Zipcode"]]
-    old_zipcode_data = _get_gsheet(config["old_key"], config["zipcode_wksht_num"], config['gsheet_key_path'])[["SEARCH SampleID", "Zipcode"]]
-
-    return pd.concat([current_zipcode_data, old_zipcode_data])
+    return current_zipcode_data.dropna()
 
 def _get_gsheet(
     file_key: str, worksheet_num: int, service_account_json: str
