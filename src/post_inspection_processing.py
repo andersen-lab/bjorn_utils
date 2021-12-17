@@ -43,7 +43,7 @@ def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/upload/gi
     new_metadata.to_csv(metadata_path, index=False)
     return
 
-def merge_zipcodes(metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/Users/karthikramesh/src/bjorn_utils/bjorn.ini") -> None:
+def merge_zipcodes(metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/home/al/code/bjorn_utils/bjorn.ini") -> None:
     """
     Takes a log file and uses the returned gisaid ids to update the metadata
     stored in the HCoV-19-Genomics repository - can be modified to update other
@@ -65,7 +65,7 @@ def merge_zipcodes(metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata
     new_metadata = pd.concat([not_missing_zipcode, merged[column_order]])
     # write new_metadata to disk
     new_metadata.to_csv(metadata_path, index=False)
-    return new_metadata
+    return
 
 def concat_fastas(file_1: str, file_2: str, combined_aligned_fasta: str) -> None:
     """
@@ -178,6 +178,7 @@ if __name__ == "__main__":
     merge_gisaid_ids()
 
     # merge zipcode data
+    merge_zipcodes()
 
     # update the readme in the github folder
     readme_main("/home/al/code/HCoV-19-Genomics/")
