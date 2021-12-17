@@ -443,10 +443,10 @@ if __name__=="__main__":
         transfer_files(ans, out_dir, include_bams=include_bams, ncpus=num_cpus)
         msa_dir = out_dir/'msa'
         if not Path.isdir(msa_dir):
-            Path.mkdir(msa_dir);
+            Path.mkdir(msa_dir)
         seqs_dir = Path(out_dir/'fa')
-        copy(ref_path, seqs_dir);
-        seqs_fp = bs.concat_fasta(seqs_dir, msa_dir/out_dir.basename());
+        copy(ref_path, seqs_dir)
+        seqs_fp = bs.concat_fasta(seqs_dir, msa_dir/out_dir.basename())
         # load concatenated sequences
         cns_seqs = SeqIO.parse(msa_dir/out_dir.basename()+'.fa', 'fasta')
         cns_seqs = list(cns_seqs)
