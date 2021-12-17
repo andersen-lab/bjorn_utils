@@ -5,6 +5,7 @@ and accordingly updates the repo readme
 
 import pandas as pd
 import os
+import sys
 
 
 def generate_location_summary_table(
@@ -41,15 +42,15 @@ def generate_location_summary_table(
 
 
 def update_and_combine_readme(
-    metadata_md: str, readme_md: str, initial_buffer: int, ending_buffer: int
+    metadata_md: str, readme_md: str, new_readme_path: str, initial_buffer: int, ending_buffer: int
 ) -> None:
     """
     Takes the current readme, updates it with new table info
     """
-    with open("new_readme.md", "w") as new_readme:
+    with open(new_readme_path, "w") as new_readme:
         # get the current readme header
         with open(readme_md, "r") as current_readme:
-            head = current_readme.readlines()[:5]
+            head = current_readme.readlines()[:initial_buffer]
         new_readme.writelines(head)
         # get the new metadata table
         with open(metadata_md, "r") as location_table:
@@ -63,21 +64,26 @@ def update_and_combine_readme(
         new_readme.writelines(tail)
     return
 
-
-if __name__ == "__main__":
+def main(folder_path: str) -> None:
     # generate new files and updated readme
     generate_location_summary_table(
-        "metadata.csv",
-        "metadata_location_summaries.md",
-        "location_consolidation_mapping.csv",
+        os.path.join(folder_path, "metadata.csv"),
+        os.path.join(folder_path, "metadata_location_summaries.md"),
+        os.path.join(folder_path, "location_consolidation_mapping.csv"),
     )
     update_and_combine_readme(
-        "metadata_location_summaries.md",
-        "README.md",
+        os.path.join(folder_path, "metadata_location_summaries.md"),
+        os.path.join(folder_path, "README.md"),
+        os.path.join(folder_path, "new_readme.md"),
         initial_buffer=5,
         ending_buffer=-20,
     )
     # rename current readme to OLD_readme,new readme to README.md
-    os.rename("README.md", "OLD_README.md")
-    os.rename("new_readme.md", "README.md")
-    os.remove("metadata_location_summaries.md")
+    os.rename(os.path.join(folder_path, "README.md"), os.path.join(folder_path, "OLD_README.md"))
+    os.rename(os.path.join(folder_path, "new_readme.md"), os.path.join(folder_path, "README.md"))
+    os.remove(os.path.join(folder_path, "metadata_location_summaries.md"))
+    return
+
+
+if __name__ == "__main__":
+    main(sys.argv[1])
