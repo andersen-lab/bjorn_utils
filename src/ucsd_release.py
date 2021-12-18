@@ -47,12 +47,12 @@ if __name__=="__main__":
             ["aws", "s3", "cp", variant_file_url, os.path.join(dir_name, variants_path, "".join([search_id, variant_file_ending]))]
         )
 
-        # subprocess.run(
-        #     ["aws", "s3", "cp", consensus_file_url, os.path.join(dir_name, cons_path, "".join([search_id, consensus_file_ending]))]
-        # )
+        subprocess.run(
+            ["aws", "s3", "cp", consensus_file_url, os.path.join(dir_name, cons_path, "".join([search_id, consensus_file_ending]))]
+        )
 
-        # subprocess.run(
-        #     ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
-        # )
+        subprocess.run(
+            ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
+        )
 
     #TODO: get the summary file last and put it in the reports path
