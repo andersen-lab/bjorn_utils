@@ -23,7 +23,7 @@ if __name__=="__main__":
     # make the folders we need, no error if they already exist
     cons_path = "consensus_sequences/illumina/"
     bams_path = "merged_aligned_bams/illumina/"
-    variants_path = "variants/illumina/reports/"
+    variants_path = "variants/illumina/"
     report_path = "trimmed_bams/illumina/reports/"
 
     for path in [cons_path, bams_path, variants_path, report_path]:
@@ -41,16 +41,18 @@ if __name__=="__main__":
         consensus_file_url = data.iloc[row, 2]
         bam_file_url = data.iloc[row, 3]
 
+        #TODO: Needs logging + multi-process
+
         subprocess.run(
             ["aws", "s3", "cp", variant_file_url, os.path.join(dir_name, variants_path, "".join([search_id, variant_file_ending]))]
         )
 
-        subprocess.run(
-            ["aws", "s3", "cp", consensus_file_url, os.path.join(dir_name, cons_path, "".join([search_id, consensus_file_ending]))]
-        )
+        # subprocess.run(
+        #     ["aws", "s3", "cp", consensus_file_url, os.path.join(dir_name, cons_path, "".join([search_id, consensus_file_ending]))]
+        # )
 
-        subprocess.run(
-            ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
-        )
+        # subprocess.run(
+        #     ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
+        # )
 
-    # get the summary file last and put it in the reports path
+    #TODO: get the summary file last and put it in the reports path
