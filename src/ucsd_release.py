@@ -17,13 +17,16 @@ if __name__=="__main__":
         ["SEARCH SampleID", "Variant File S3 URL", "Consensus File S3 URL", "BAM File S3 URL"]
         ]
     
+    /asgard/analysis/2021.12.16_ucsd/2021-12-08_21-26-58-all.bjorn_summary_man_SEARCH-58367_no_release_MZ.csv
+
+
     # get the directory name and cd into it
     dir_name = os.path.dirname(sys.argv[1])
     
     # make the folders we need, no error if they already exist
     cons_path = "consensus_sequences/illumina/"
     bams_path = "merged_aligned_bams/illumina/"
-    variants_path = "trimmed_bams/illumina/reports/"
+    variants_path = "variants/illumina/reports/"
     report_path = "trimmed_bams/illumina/reports/"
 
     for path in [cons_path, bams_path, variants_path, report_path]:
