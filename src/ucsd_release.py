@@ -17,9 +17,6 @@ if __name__=="__main__":
         ["SEARCH SampleID", "Variant File S3 URL", "Consensus File S3 URL", "BAM File S3 URL"]
         ]
     
-    /asgard/analysis/2021.12.16_ucsd/2021-12-08_21-26-58-all.bjorn_summary_man_SEARCH-58367_no_release_MZ.csv
-
-
     # get the directory name and cd into it
     dir_name = os.path.dirname(sys.argv[1])
     
