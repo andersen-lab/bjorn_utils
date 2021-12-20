@@ -160,25 +160,25 @@ if __name__ == "__main__":
     subprocess.run(["../upload/gsutil_uploader.sh", sys.argv[1]])
 
     # upload to gisaid using the metadata in the folder and get the logs
-    gisaid_fasta = combined_unaligned_fasta
-    gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
-    gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
-    subprocess.run(["../upload/gisaid_uploader", 
-                    "CoV", 
-                    "upload", 
-                    "--fasta", 
-                    gisaid_fasta,
-                    "--csv" ,
-                    gisaid_metadata, 
-                    "--failedout", 
-                    gisaid_failed_metadata]
-                )
+    # gisaid_fasta = combined_unaligned_fasta
+    # gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
+    # gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
+    # subprocess.run(["../upload/gisaid_uploader", 
+    #                 "CoV", 
+    #                 "upload", 
+    #                 "--fasta", 
+    #                 gisaid_fasta,
+    #                 "--csv" ,
+    #                 gisaid_metadata, 
+    #                 "--failedout", 
+    #                 gisaid_failed_metadata]
+    #             )
 
-    # use gisaid metadata to update the github metadata
-    merge_gisaid_ids()
+    # # use gisaid metadata to update the github metadata
+    # merge_gisaid_ids()
 
-    # merge zipcode data
-    merge_zipcodes()
+    # # merge zipcode data
+    # merge_zipcodes()
 
-    # update the readme in the github folder
-    readme_main("/home/al/code/HCoV-19-Genomics/")
+    # # update the readme in the github folder
+    # readme_main("/home/al/code/HCoV-19-Genomics/")
