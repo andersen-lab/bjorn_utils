@@ -365,6 +365,7 @@ if __name__=="__main__":
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
     # load sample sheet data (GISAID) - make sure to download most recent one
     seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
+    #seqsum = pd.read_csv("/asgard/analysis/2021.12.16_ucsd/2021-12-08_21-26-58-all.bjorn_summary_man_SEARCH-58367_no_release_MZ.csv")
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format

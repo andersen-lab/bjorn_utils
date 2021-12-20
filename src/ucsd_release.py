@@ -56,3 +56,23 @@ if __name__=="__main__":
         )
 
     #TODO: get the summary file last and put it in the reports path
+
+    # path is as follows
+    # f's3://ucsd-all/phylogeny/{file name without .bjorn_summary_man_...}/{file name without .bjorn_summary_man_... + .full_summary.csv}
+
+    # read this file to pd
+    # select the following columns = [["bam_name", "bjorn_coverage", "bjorn_avg_depth", "bjorn_min_coverage", "bjorn_max_coverage", "bjorn_num_w_zero_coverage"]]
+
+    # rename the columsn as such {"bjorn_coverage": "COVERAGE", "bjorn_avg_depth": "AVG_DEPTH", "bjorn_min_coverage": "MIN", "bjorn_max_coverage": "MAX", "bjorn_num_w_zero_coverage": "ZERO_DEPTH"}
+
+    # dropna(inplace=True)
+
+    # rename the sample file names so that we get the right set up for bjorn
+    # df["SAMPLE"] = [result[0]+"_L001_L002.trimmed.sorted.bam" for result in df["bam_name"].str.split("__")]
+
+    # drop the bam_name column -> df.drop(columns=["bam_name"], inplace=True)
+    # reorder the columns for output -> out = df[["SAMPLE", "COVERAGE", "AVG_DEPTH", "MIN", "MAX", "ZERO_DEPTH"]]
+
+    # save out to trimmed_bams/illumina/reports/ as coverage_report.tsv
+
+    # remove the file we downloaded from aws to save space
