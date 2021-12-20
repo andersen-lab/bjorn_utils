@@ -288,6 +288,11 @@ if __name__=="__main__":
                         type=int,
                         default=1,
                         help="Number of cpus to use")
+ 
+    parser.add_argument("-s", "--sample-sheet",
+                        type=str,
+                        default="",
+                        help="Sample sheet to use. Pass nothing to use google sheet")
 
     parser.add_argument("-a", "--analysis-folder",
                         type=str,
@@ -364,8 +369,10 @@ if __name__=="__main__":
     # merge consensus and bam filepaths for each sample ID
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
     # load sample sheet data (GISAID) - make sure to download most recent one
-    seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
-    #seqsum = pd.read_csv("/asgard/analysis/2021.12.16_ucsd/2021-12-08_21-26-58-all.bjorn_summary_man_SEARCH-58367_no_release_MZ.csv")
+    if args.sample == "":
+        seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
+    else:
+        seqsum = pd.read_csv(args.sample_sheet)
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
@@ -448,6 +455,7 @@ if __name__=="__main__":
         seqs_dir = Path(out_dir/'fa')
         copy(ref_path, seqs_dir)
         seqs_fp = bs.concat_fasta(seqs_dir, msa_dir/out_dir.basename())
+        print(seqs_fp)
         # load concatenated sequences
         cns_seqs = SeqIO.parse(msa_dir/out_dir.basename()+'.fa', 'fasta')
         cns_seqs = list(cns_seqs)
