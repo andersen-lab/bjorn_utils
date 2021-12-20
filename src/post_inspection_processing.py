@@ -146,10 +146,10 @@ if __name__ == "__main__":
     Takes only 1 argument, which is the bjorn generated folder
     #TODO: Allow this to take location of the HCoV-19-Genomics folder as an argument throughout
     """
-    white_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].splt("/")[2] + "_aligned_white.fa")
-    inspect_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].splt("/")[2] + "_aligned_inspect.fa")
-    combined_aligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].splt("/")[2] + "_combined_aligned.fa")
-    combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].splt("/")[2] + "_combined_unaligned.fa")
+    white_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_white.fa")
+    inspect_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_inspect.fa")
+    combined_aligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].spliit("/")[2] + "_combined_aligned.fa")
+    combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_unaligned.fa")
     
     # concat, unalign, and multifasta to fasta consensus sequences
     concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     multifasta_to_fasta(combined_unaligned_fasta)
 
     # kick off gsutil upload
-    subprocess.run(["../upload/gsutil_uploader.sh", sys.argv[1]])
+    # subprocess.run(["../upload/gsutil_uploader.sh", sys.argv[1]])
 
     # upload to gisaid using the metadata in the folder and get the logs
     # gisaid_fasta = combined_unaligned_fasta
