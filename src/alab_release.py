@@ -369,7 +369,7 @@ if __name__=="__main__":
     # merge consensus and bam filepaths for each sample ID
     analysis_df = pd.merge(consensus_df, bam_df, on='sample_id', how='left')
     # load sample sheet data (GISAID) - make sure to download most recent one
-    if args.sample == "":
+    if args.sample_sheet == "":
         seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
     else:
         seqsum = pd.read_csv(args.sample_sheet)
