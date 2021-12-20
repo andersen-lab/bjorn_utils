@@ -148,7 +148,7 @@ if __name__ == "__main__":
     """
     white_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_white.fa")
     inspect_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_inspect.fa")
-    combined_aligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].spliit("/")[2] + "_combined_aligned.fa")
+    combined_aligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_aligned.fa")
     combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_unaligned.fa")
     
     # concat, unalign, and multifasta to fasta consensus sequences
