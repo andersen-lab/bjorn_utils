@@ -31,7 +31,7 @@ if __name__=="__main__":
     
     #define file endings
     variant_file_ending = "_L001_L002.tsv"
-    consensus_file_ending = "_L001_L002.fa "
+    consensus_file_ending = "_L001_L002.fa"
     bam_file_ending = "_L001_L002.sorted.bam"
 
     for row in range(len(data.index)):
@@ -54,8 +54,39 @@ if __name__=="__main__":
         subprocess.run(
             ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
         )
+    
+    #TODO: Test if this works and then replace with a pythonic solution
+    os.chdir(os.path.join(dir_name, "consensus_sequences", "illumina"))
+    subprocess.run(
+        ["gawk", "-i", "inplace", "'/^>/{print'", '">Consensus_"', 'substr(FILENAME,1,length(FILENAME)-3)"_threshold_0.5_quality_20";', 'next}', "1'" , "*.fa"]
+    )
 
-    #TODO: get the summary file last and put it in the reports path
+    #TODO: Test if this works
+    os.chdir(dir_name, report_path)
+    report_file_url = "s3://ucsd-all/phylogeny/" + sys.argv[1].split(".")[0] + "/" + sys.argv[1].split(".")[0] + ".full_summary.csv"
+    subprocess.run(
+        ["aws", "s3", "cp", report_file_url, os.path.join(dir_name, report_path, "full_summary.csv")]
+        )
+
+    summary = pd.read_csv("full_summary.csv")[["bam_name", "bjorn_coverage", "bjorn_avg_depth", "bjorn_min_coverage", "bjorn_max_coverage", "bjorn_num_w_zero_coverage"]]
+    summary.rename(
+        columns={
+            "bjorn_coverage": "COVERAGE",
+            "bjorn_avg_depth": "AVG_DEPTH",
+            "bjorn_min_coverage": "MIN",
+            "bjorn_max_coverage": "MAX",
+            "bjorn_num_w_zero_coverage": "ZERO_DEPTH"},
+            inplace=True
+            )
+    summary.dropna(inplace=True)
+
+    summary["SAMPLE"] = [result[0]+"_L001_L002.trimmed.sorted.bam" for result in summary["bam_name"].str.split("__")]
+
+    summary.drop(columns=["bam_name"], inplace=True)
+
+    coverage_report = summary[["SAMPLE", "COVERAGE", "AVG_DEPTH", "MIN", "MAX", "ZERO_DEPTH"]]
+
+    coverage_report.to_csv("coverage_report.tsv", index=False)
 
     # path is as follows
     # f's3://ucsd-all/phylogeny/{file name without .bjorn_summary_man_...}/{file name without .bjorn_summary_man_... + .full_summary.csv}
@@ -74,5 +105,3 @@ if __name__=="__main__":
     # reorder the columns for output -> out = df[["SAMPLE", "COVERAGE", "AVG_DEPTH", "MIN", "MAX", "ZERO_DEPTH"]]
 
     # save out to trimmed_bams/illumina/reports/ as coverage_report.tsv
-
-    # remove the file we downloaded from aws to save space

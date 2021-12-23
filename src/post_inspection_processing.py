@@ -152,27 +152,27 @@ if __name__ == "__main__":
     combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_unaligned.fa")
     
     # concat, unalign, and multifasta to fasta consensus sequences
-    # concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
-    # unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
-    # multifasta_to_fasta(combined_unaligned_fasta)
+    concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
+    unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
+    multifasta_to_fasta(combined_unaligned_fasta)
 
     # kick off gsutil upload
-    # subprocess.run(["../upload/gsutil_uploader.sh", sys.argv[1]])
+    subprocess.run(["../upload/gsutil_uploader.sh", sys.argv[1]])
 
     # upload to gisaid using the metadata in the folder and get the logs
-    # gisaid_fasta = combined_unaligned_fasta
-    # gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
-    # gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
-    # subprocess.run(["../upload/gisaid_uploader", 
-    #                 "CoV", 
-    #                 "upload", 
-    #                 "--fasta", 
-    #                 gisaid_fasta,
-    #                 "--csv" ,
-    #                 gisaid_metadata, 
-    #                 "--failedout", 
-    #                 gisaid_failed_metadata]
-    #             )
+    gisaid_fasta = combined_unaligned_fasta
+    gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
+    gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
+    subprocess.run(["../upload/gisaid_uploader", 
+                    "CoV", 
+                    "upload", 
+                    "--fasta", 
+                    gisaid_fasta,
+                    "--csv" ,
+                    gisaid_metadata, 
+                    "--failedout", 
+                    gisaid_failed_metadata]
+                )
 
     # use gisaid metadata to update the github metadata
     merge_gisaid_ids()
@@ -180,5 +180,6 @@ if __name__ == "__main__":
     # merge zipcode data
     merge_zipcodes()
 
+    # TODO: Fix errors here
     # update the readme in the github folder
-    readme_main("/home/al/code/HCoV-19-Genomics/")
+    # readme_main("/home/al/code/HCoV-19-Genomics/")

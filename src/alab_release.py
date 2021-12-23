@@ -83,7 +83,8 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     for key in column_mapping:
         converted_meta_df[column_mapping[key]] = new_meta_df[key]
     na_cols = ['covv_gender','covv_patient_age','covv_patient_status', 'covv_sampling_strategy', "covv_comment", "comment_type"]
-    converted_meta_df[na_cols] = "N/A"
+    for col in na_cols:
+        converted_meta_df[col] = "N/A"
     converted_meta_df['covv_assembly_method'] = 'iVar 1.3.1'
     converted_meta_df['submitter'] = 'mzeller'
     converted_meta_df[gisaid_columns_new].to_csv(out_dir/'gisaid_metadata.csv', index=False)
