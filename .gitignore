@@ -132,3 +132,7 @@ dmypy.json
 data
 .DS_Store
 bjorn.ini
+gspread_token.json
+src/gisaid_uploader
+src/gisaid_uploader.authtoken
+src/gsutil_uploader.sh
