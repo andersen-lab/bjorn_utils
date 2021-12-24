@@ -8,7 +8,7 @@ separate package elements
 
 import os
 import sys
-from Bio import SeqIO, Fas
+from Bio import SeqIO
 import pandas as pd
 import subprocess
 from readme_update import main as readme_main
