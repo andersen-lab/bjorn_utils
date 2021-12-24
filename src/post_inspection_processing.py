@@ -128,16 +128,17 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
     #             lines = []
 
     # generate a separated fasta file for each sequence - NEW METHOD
+    failed_sequences = []
     with open(combined_unaligned_fasta, "r") as infile:
         records = SeqIO.parse(infile, "fasta")
         for record in records:
             try:
                 file_path = os.path.join(cons_dir, record.id.split("/")[2] + ".fasta")
+                with open(file_path, "w") as outfile:
+                    SeqIO.write(record, outfile, "fasta")
             except IndexError:
-                file_path = record.id
-            with open(file_path, "w") as outfile:
-                SeqIO.write(record, outfile, "fasta")
-    return
+                failed_sequences.append(record.id)
+    return failed_sequences
 
 
 def _get_fasta_true_name(header: str) -> str:
