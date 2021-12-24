@@ -8,7 +8,7 @@ separate package elements
 
 import os
 import sys
-from Bio.SeqIO import read
+from Bio import SeqIO
 import pandas as pd
 import subprocess
 from readme_update import main as readme_main
@@ -105,27 +105,35 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
     cons_dir = os.path.join(base_dir, "consensus_sequences")
     if not os.path.exists(cons_dir):
         os.mkdir(cons_dir)
-    # generate a separated fasta file for each sequence
-    file_name = ""
-    header = ""
-    lines = []
+    # generate a separated fasta file for each sequence - OLD METHOD
+    # file_name = ""
+    # header = ""
+    # lines = []
+    # with open(combined_unaligned_fasta, "r") as infile:
+    #     for line in infile:
+    #         if line[0] == ">" and header == "":
+    #             file_name = _get_fasta_true_name(line)
+    #             header = line
+    #         elif line[0] != ">" and header != "":
+    #             lines.append(line)
+    #         elif line[0] == ">" and header != "":
+    #             # write out the previous sequence to disk
+    #             file_path = os.path.join(
+    #                 base_dir, "consensus_sequences", file_name + ".fasta"
+    #             )
+    #             with open(file_path, "w") as outfile:
+    #                 outfile.writelines([header, "".join(lines)])
+    #             file_name = _get_fasta_true_name(line)
+    #             header = ""
+    #             lines = []
+
+    # generate a separated fasta file for each sequence - NEW METHOD
     with open(combined_unaligned_fasta, "r") as infile:
-        for line in infile:
-            if line[0] == ">" and header == "":
-                file_name = _get_fasta_true_name(line)
-                header = line
-            elif line[0] != ">" and header != "":
-                lines.append(line)
-            elif line[0] == ">" and header != "":
-                # write out the previous sequence to disk
-                file_path = os.path.join(
-                    base_dir, "consensus_sequences", file_name + ".fasta"
-                )
-                with open(file_path, "w") as outfile:
-                    outfile.writelines([header, "".join(lines)])
-                file_name = _get_fasta_true_name(line)
-                header = ""
-                lines = []
+        records = SeqIO.parse(infile, "fasta")
+        for record in records:
+            file_path = os.path.join(cons_dir, record.id.split("/")[2] + ".fasta")
+            with open(file_path, "w") as outfile:
+                SeqIO.write(record, outfile, "fasta")
     return
 
 
