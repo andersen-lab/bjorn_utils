@@ -131,7 +131,10 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
     with open(combined_unaligned_fasta, "r") as infile:
         records = SeqIO.parse(infile, "fasta")
         for record in records:
-            file_path = os.path.join(cons_dir, record.id.split("/")[2] + ".fasta")
+            try:
+                file_path = os.path.join(cons_dir, record.id.split("/")[2] + ".fasta")
+            except IndexError:
+                file_path = record.id
             with open(file_path, "w") as outfile:
                 SeqIO.write(record, outfile, "fasta")
     return
