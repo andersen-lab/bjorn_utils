@@ -113,7 +113,7 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
             try:
                 file_path = os.path.join(cons_dir, record.id.split("/")[2] + ".fasta")
                 with open(file_path, "w") as outfile:
-                    SeqIO.write(SeqIO.FastaIO.as_fasta_2line(record), outfile, "fasta")
+                    outfile.writelines(SeqIO.FastaIO.as_fasta_2line(record))
             except IndexError:
                 failed_sequences.append(record.id)
     return failed_sequences
