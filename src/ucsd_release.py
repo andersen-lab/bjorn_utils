@@ -64,6 +64,8 @@ if __name__=="__main__":
     #TODO: Test if this works
     os.chdir(os.path.join(dir_name, report_path))
     report_file_url = "s3://ucsd-all/phylogeny/" + sys.argv[1].split(".")[0] + "/" + sys.argv[1].split(".")[0] + ".full_summary.csv"
+    print(report_file_url)
+    print(os.getcwd())
     subprocess.run(
         ["aws", "s3", "cp", report_file_url, os.path.join(dir_name, report_path, "full_summary.csv")]
         )
