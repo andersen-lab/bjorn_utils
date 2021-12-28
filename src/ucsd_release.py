@@ -13,6 +13,7 @@ if __name__=="__main__":
     output usable by bjorn
     """
     # read in the data file
+    #TODO: Ask mark to change the label he assigns to "Address.1" to "Submitting Lab Address"
     data = pd.read_csv(sys.argv[1])[
         ["SEARCH SampleID", "Variant File S3 URL", "Consensus File S3 URL", "BAM File S3 URL"]
         ]
