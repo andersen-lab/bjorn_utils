@@ -143,14 +143,19 @@ if __name__ == "__main__":
     combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_unaligned.fa")
     
     # concat, unalign, and multifasta to fasta consensus sequences
-    # concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
-    # unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
-    # multifasta_to_fasta(combined_unaligned_fasta)
+    concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
+    unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
+    multifasta_to_fasta(combined_unaligned_fasta)
+
+    #TODO: Check Pangolin lineage timings
+
+    #TODO: Check dates to make sure they are within bounds
 
     # kick off gsutil upload
-    # subprocess.run(["./gsutil_uploader.sh", sys.argv[1]])
+    subprocess.run(["./gsutil_uploader.sh", sys.argv[1]])
 
     # upload to gisaid using the metadata in the folder and get the logs
+    #TODO: Add some kind of logging that allows us to understand what we have done so far for a bjorn folder
     gisaid_fasta = combined_unaligned_fasta
     gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
@@ -169,7 +174,9 @@ if __name__ == "__main__":
     merge_gisaid_ids()
 
     # merge zipcode data
-    # merge_zipcodes()
+    merge_zipcodes()
+
+    #TODO: Run pangolin on the whole dataset here
 
     # TODO: Fix errors here
     # update the readme in the github folder

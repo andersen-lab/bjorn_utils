@@ -70,6 +70,7 @@ def create_github_meta(new_meta_df: pd.DataFrame, old_meta_filepath: str, meta_c
 
 def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     """Generate GISAID metadata for newly released samples"""
+    #TODO: Make sure date is in ISO format YYYY/MM/DD
     gisaid_columns_new = [
         'submitter', 'fn', 'covv_virus_name', 'covv_type', 'covv_passage', 'covv_collection_date', 
         'covv_location', 'covv_add_location','covv_host', 'covv_add_host_info', 'covv_sampling_strategy', 'covv_gender', 
@@ -82,6 +83,7 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     converted_meta_df = pd.DataFrame()
     for key in column_mapping:
         converted_meta_df[column_mapping[key]] = new_meta_df[key]
+    #TODO: covv_comment and comment_type need to be empty string here
     na_cols = ['covv_gender','covv_patient_age','covv_patient_status', 'covv_sampling_strategy', "covv_comment", "comment_type"]
     for col in na_cols:
         converted_meta_df[col] = "N/A"
