@@ -43,17 +43,19 @@ def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisai
     new_metadata.to_csv(metadata_path, index=False)
     return
 
-def merge_zipcodes(local_file_path: str, metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/home/al/code/bjorn_utils/bjorn.ini") -> None:
+def merge_zipcodes(local_file_path: str = "", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/home/al/code/bjorn_utils/bjorn.ini") -> None:
     """
     Takes a log file and uses the returned gisaid ids to update the metadata
     stored in the HCoV-19-Genomics repository - can be modified to update other
     metadata files in future iterations 
     """
     # generate a dataframe with these two columns
-    # df = zipcode_interactor(config_key_path).rename(
-    #    columns={"Zipcode": "zipcode", "SEARCH SampleID": "ID"}
-    #    )
-    df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]]
+    if local_file_path == "" :
+        df = zipcode_interactor(config_key_path).rename(
+            columns={"Zipcode": "zipcode", "SEARCH SampleID": "ID"}
+            )
+    else:
+        df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]]
     # read metadata file
     metadata = pd.read_csv(metadata_path)
     column_order = metadata.columns.to_list()
@@ -178,6 +180,6 @@ if __name__ == "__main__":
 
     #TODO: Run pangolin on the whole dataset here
 
-    # TODO: Fix errors here
+    #TODO: Fix errors here
     # update the readme in the github folder
     # readme_main("/home/al/code/HCoV-19-Genomics/")
