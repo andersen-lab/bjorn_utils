@@ -13,7 +13,6 @@ if __name__=="__main__":
     output usable by bjorn
     """
     # read in the data file
-    #TODO: Ask mark to change the label he assigns to "Address.1" to "Submitting Lab Address"
     data = pd.read_csv(sys.argv[1])[
         ["SEARCH SampleID", "Variant File S3 URL", "Consensus File S3 URL", "BAM File S3 URL"]
         ]
@@ -56,13 +55,11 @@ if __name__=="__main__":
             ["aws", "s3", "cp", bam_file_url, os.path.join(dir_name, bams_path, "".join([search_id, bam_file_ending]))]
         )
     
-    # #TODO: Replace this with a pythonic equivalent - for now, remember to run manualy
-    # os.chdir(os.path.join(dir_name, "consensus_sequences", "illumina"))
-    # subprocess.run(
-    #     ["gawk", "-i", "inplace", "'/^>/{print'", '">Consensus_"', 'substr(FILENAME,1,length(FILENAME)-3)"_threshold_0.5_quality_20";', 'next}', "1'" , "*.fa"]
-    # )
+    #TODO: Replace this with a pythonic equivalent
+    os.chdir(os.path.join(dir_name, "consensus_sequences", "illumina"))
+    replace_command = '''gawk -i inplace '/^>/{print ">Consensus_" substr(FILENAME,1,length(FILENAME)-3)"_threshold_0.5_quality_20"; next} 1' *.fa'''
+    subprocess.call(replace_command, shell=True)
 
-    #TODO: Confirm output with Mark
     os.chdir(os.path.join(dir_name, report_path))
     # get the files name without folder
     base_name = os.path.basename(sys.argv[1])

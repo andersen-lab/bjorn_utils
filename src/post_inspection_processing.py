@@ -136,7 +136,8 @@ def _get_fasta_true_name(header: str) -> str:
 if __name__ == "__main__":
     # generate files from folder pattern
     """
-    Takes only 1 argument, which is the bjorn generated folder
+    Takes only 1 required argument, which is the bjorn generated folder
+    Second argument can be the location of the metadata file from which to pull zipcodes
     #TODO: Allow this to take location of the HCoV-19-Genomics folder as an argument throughout
     """
     white_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_white.fa")
@@ -176,9 +177,14 @@ if __name__ == "__main__":
     merge_gisaid_ids()
 
     # merge zipcode data
-    merge_zipcodes()
+    if len(sys.argv) == 2:
+        merge_zipcodes(local_file_path=sys.argv[2])
+    elif len(sys.argv) == 1:
+        merge_zipcodes()
+    else:
+        raise Exception("Merge zipcodes received incorrect number of arguments")
 
-    #TODO: Run pangolin on the whole dataset here
+    #TODO: Run pangolin on the whole dataset here vs separately in the pangolin script
 
     #TODO: Fix errors here
     # update the readme in the github folder
