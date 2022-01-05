@@ -39,7 +39,7 @@ rm temp
 rm -r logs
 conda deactivate
 
-#sync
+# sync
 # printf "${cyan}Syncing with repo...\n${reset}"
 # git add -A
 # git commit -m "updated pangolineages"

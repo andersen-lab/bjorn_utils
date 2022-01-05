@@ -35,13 +35,14 @@ if __name__=="__main__":
     bam_file_ending = "_L001_L002.sorted.bam"
 
     for row in range(len(data.index)):
+        #TODO: Precalculate all the commands, add them to a list, and then have 10 processes work on them concurrently or something
         # get out the relevant info so we can use it on subprocess
         search_id = data.iloc[row, 0]
         variant_file_url = data.iloc[row, 1]
         consensus_file_url = data.iloc[row, 2]
         bam_file_url = data.iloc[row, 3]
 
-        #TODO: Needs logging + multi-process
+        #TODO: Needs logging + multi-process, or to be called via boto3
 
         subprocess.run(
             ["aws", "s3", "cp", variant_file_url, os.path.join(dir_name, variants_path, "".join([search_id, variant_file_ending]))]

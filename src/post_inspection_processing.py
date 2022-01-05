@@ -185,6 +185,7 @@ if __name__ == "__main__":
         raise Exception("Merge zipcodes received incorrect number of arguments")
 
     #TODO: Run pangolin on the whole dataset here vs separately in the pangolin script
+    subprocess.run(["./update_pangolineages.sh"])
 
     #TODO: Fix errors here
     # update the readme in the github folder
