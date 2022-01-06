@@ -32,7 +32,7 @@ pangolin --update
 # run Pangolin
 printf "${cyan}Running Pangolin...\n${reset}"
 cd ..
-pangolin temp
+pangolin temp -t 25
 
 # cleanup
 rm temp

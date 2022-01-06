@@ -177,6 +177,7 @@ if __name__ == "__main__":
     merge_gisaid_ids()
 
     # merge zipcode data
+    #TODO: Fix errors when using two arguments
     if len(sys.argv) == 2:
         merge_zipcodes(local_file_path=sys.argv[2])
     elif len(sys.argv) == 1:
