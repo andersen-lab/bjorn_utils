@@ -6,6 +6,8 @@ Can either be called from command line directly as a cohesive package or as
 separate package elements
 """
 
+from datetime import date
+from logging import raiseExceptions
 import os
 import sys
 from Bio import SeqIO
@@ -13,6 +15,14 @@ import pandas as pd
 import subprocess
 from readme_update import main as readme_main
 from gsheet_interact import zipcode_interactor
+
+pango_dict = {
+        "Delta (B.1.617.2-like)": "2021-03-01",
+        "Alpha (B.1.1.7-like)": "2020-12-01",
+        "Epsilon (B.1.429-like)": "2020-10-01",
+        "Mu (B.1.621-like)": "2020-12-01",
+        "Omicron (BA.1-like)": "2021-11-01"
+    }
 
 def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisaid_uploader.log", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv") -> None:
     """
@@ -131,6 +141,13 @@ def _get_fasta_true_name(header: str) -> str:
     else:
         return header[1:]
 
+def check_lineage_report(report: pd.DataFrame) -> pd.DataFrame:
+    """
+    Checks to make sure that all lineages that have been called
+    are within the appropriate time frame
+    """
+    
+
 
 if __name__ == "__main__":
     # generate files from folder pattern
@@ -149,9 +166,12 @@ if __name__ == "__main__":
     unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
     multifasta_to_fasta(combined_unaligned_fasta)
 
-    #TODO: Check Pangolin lineage timings
+    #TODO: Check Pangolin lineage timings for the current set of sequences
+    os.chdir(os.path.join(sys.argv[1], "msa"))
+    subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
+    lineage_report = pd.read_csv("lineage_report.csv")
 
-    #TODO: Check dates to make sure they are within bounds
+
 
     # kick off gsutil upload
     subprocess.run(["./gsutil_uploader.sh", sys.argv[1]])
@@ -160,6 +180,23 @@ if __name__ == "__main__":
     #TODO: Add some kind of logging that allows us to understand what we have done so far for a bjorn folder
     gisaid_fasta = combined_unaligned_fasta
     gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
+    
+    # confirm that all dates are between 1/1/2020 and today
+    date_range = pd.Series(pd.date_range('2020-1-1', pd.to_datetime("today")))
+    data = pd.read_csv(gisaid_metadata)
+    test_frame = data[~data["covv_collection_date"].isin(date_range)]
+    if len(test_frame) > 0:
+        print(test_frame)
+        raise Exception("Error - metadata date range out of assigned limits - check metadata")
+
+    # confirm that the years in the virus name match the year in the collection date
+    data["virus_year"] = [item.split("/")[-1] for item in data["covv_virus_name"]]
+    data["collection_year"] = [str(item.year) for item in data["covv_collection_date"]]
+    test_frame = data[~(data["virus_year"] == data["collection_year"])]
+    if len(test_frame) > 0:
+        print(test_frame)
+        raise Exception("Error - collection year does not match year assigned to samples - check metadata")
+
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
     subprocess.run(["./gisaid_uploader", 
                     "CoV", 
@@ -176,10 +213,9 @@ if __name__ == "__main__":
     merge_gisaid_ids()
 
     # merge zipcode data
-    #TODO: Fix errors when using two arguments
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         merge_zipcodes(local_file_path=sys.argv[2])
-    elif len(sys.argv) == 1:
+    elif len(sys.argv) == 2:
         merge_zipcodes()
     else:
         raise Exception("Merge zipcodes received incorrect number of arguments")
