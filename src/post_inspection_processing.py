@@ -85,7 +85,6 @@ def concat_fastas(file_1: str, file_2: str, combined_aligned_fasta: str) -> None
                     outfile.write(line)
     return
 
-
 def unalign_fasta(combined_aligned_fasta: str, combined_unaligned_fasta: str) -> None:
     """
     Takes an aligned fasta and writes an unaligned fasta to the same directory
@@ -124,7 +123,6 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
                 failed_sequences.append(record.id)
     return failed_sequences
 
-
 def _get_fasta_true_name(header: str) -> str:
     """
     Take a header line which is supposed to be a fasta name and then get the
@@ -134,8 +132,6 @@ def _get_fasta_true_name(header: str) -> str:
         return header.split("/")[2]
     else:
         return header[1:]
-
-
 
 
 if __name__ == "__main__":
@@ -188,8 +184,9 @@ if __name__ == "__main__":
     test_frame = meta_lineage_reference_merge[meta_lineage_reference_merge["covv_collection_date"] < meta_lineage_reference_merge["reference_date"]]
     if len(test_frame) > 0:
         print(test_frame)
-        raise Exception("Error: pango lineage appears before reference start date - check metadata")
+        raise Exception("Error: lineage appears before reference start date - check metadata and sequences")
 
+    # now that date checks are complete, we can commense with the actual upload
     # actual gisaid upload
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
     subprocess.run(["./gisaid_uploader", 
