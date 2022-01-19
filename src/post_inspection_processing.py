@@ -97,7 +97,6 @@ def unalign_fasta(combined_aligned_fasta: str, combined_unaligned_fasta: str) ->
                     outfile.write(line.replace("-", ""))
     return
 
-#TODO: Test if this works correctly with new Bio usage
 def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
     """
     Takes a combined fasta and splits it into separate files in a "consensus

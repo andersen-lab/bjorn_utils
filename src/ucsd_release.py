@@ -33,6 +33,7 @@ if __name__=="__main__":
     variant_file_ending = "_L001_L002.tsv"
     consensus_file_ending = "_L001_L002.fa"
     bam_file_ending = "_L001_L002.sorted.bam"
+    print("Folder creation complete")
 
     # initiate boto3
     s3 = boto3.client('s3')
