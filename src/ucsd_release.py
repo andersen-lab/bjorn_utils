@@ -1,12 +1,10 @@
-from posixpath import dirname
 import pandas as pd
 import os
 import subprocess
 import sys
 
 import boto3
-
-from pandas.core.reshape.merge import merge_ordered
+from tqdm import tqdm
 
 if __name__=="__main__":
     """
@@ -44,17 +42,17 @@ if __name__=="__main__":
     # iterate through downloads for each command type
 
     # variant commands
-    for row in zip(data["SEARCH SampleID"].to_list(), data["Variant File S3 URL"].to_list()):
+    for row in tqdm(zip(data["SEARCH SampleID"].to_list(), data["Variant File S3 URL"].to_list())):
         s3.download_file(bucket_name, row[1].split("ucsd-all/")[1], os.path.join(dir_name, variants_path, "".join([row[0], variant_file_ending])))
     print("Variant file transfer complete")
 
     # consensus commands
-    for row in zip(data["SEARCH SampleID"].to_list(), data["Consensus File S3 URL"].to_list()):
+    for row in tqdm(zip(data["SEARCH SampleID"].to_list(), data["Consensus File S3 URL"].to_list())):
         s3.download_file(bucket_name, row[1].split("ucsd-all/")[1], os.path.join(dir_name, cons_path, "".join([row[0], consensus_file_ending])))
     print("Consensus file transfer complete")
 
     # bam commands
-    for row in zip(data["SEARCH SampleID"].to_list(), data["BAM File S3 URL"].to_list()):
+    for row in tqdm(zip(data["SEARCH SampleID"].to_list(), data["BAM File S3 URL"].to_list())):
         s3.download_file(bucket_name, row[1].split("ucsd-all/")[1], os.path.join(dir_name, bams_path, "".join([row[0], bam_file_ending])))
     print("BAM file transfer complete")
 
