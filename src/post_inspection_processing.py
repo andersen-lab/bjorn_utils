@@ -146,7 +146,7 @@ def check_lineage_report(report: pd.DataFrame) -> pd.DataFrame:
     Checks to make sure that all lineages that have been called
     are within the appropriate time frame
     """
-    
+    pass
 
 
 if __name__ == "__main__":
