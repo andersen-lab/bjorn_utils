@@ -156,6 +156,8 @@ if __name__ == "__main__":
     gisaid_fasta = combined_unaligned_fasta
     gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
 
+    #TODO: Add checking to make sure mark didn't switch the virus number and id like jc
+
     # confirm that all dates are between 1/1/2020 and today
     date_range = pd.Series(pd.date_range('2020-1-1', pd.to_datetime("today")))
     data = pd.read_csv(gisaid_metadata)
@@ -174,13 +176,12 @@ if __name__ == "__main__":
         raise Exception("Error: collection year does not match year assigned to samples - check metadata")
 
     # check Pangolin lineage timings for the current set of sequences
-    os.chdir(os.path.join(sys.argv[1], "msa"))
     subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
     lineage_report = pd.read_csv("lineage_report.csv")[['taxon', "scorpio_call"]]
     metadata_reduced = data[["covv_virus_name", "covv_collection_date"]] 
     metadata_reduced["taxon"] = [item.split("/")[2] for item in metadata_reduced["covv_virus_name"]]
     meta_lineage_merge = metadata_reduced.merge(lineage_report, how="left", on="taxon")
-    pango_df = pd.read_csv("../lineage_reference.csv")
+    pango_df = pd.read_csv(os.path.join(sys.argv[1], "msa", "lineage_reference.csv"))
     meta_lineage_reference_merge = meta_lineage_merge.merge(pango_df, how="left", on="scorpio_call")
     test_frame = meta_lineage_reference_merge[meta_lineage_reference_merge["covv_collection_date"] < meta_lineage_reference_merge["reference_date"]]
     if len(test_frame) > 0:
