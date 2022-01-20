@@ -159,6 +159,7 @@ if __name__ == "__main__":
     # confirm that all dates are between 1/1/2020 and today
     date_range = pd.Series(pd.date_range('2020-1-1', pd.to_datetime("today")))
     data = pd.read_csv(gisaid_metadata)
+    data["covv_collection_date"] = pd.to_datetime(data["covv_collection_date"])
     test_frame = data[~data["covv_collection_date"].isin(date_range)]
     if len(test_frame) > 0:
         print(test_frame)
