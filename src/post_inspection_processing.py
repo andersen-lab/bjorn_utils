@@ -183,6 +183,8 @@ if __name__ == "__main__":
     meta_lineage_merge = metadata_reduced.merge(lineage_report, how="left", on="taxon")
     pango_df = pd.read_csv("../lineage_reference.csv")
     meta_lineage_reference_merge = meta_lineage_merge.merge(pango_df, how="left", on="scorpio_call")
+    meta_lineage_reference_merge["reference_date"] = pd.to_datetime(meta_lineage_reference_merge["reference_date"])
+    meta_lineage_reference_merge["covv_collection_date"] = pd.to_datetime(meta_lineage_reference_merge["covv_collection_date"])
     test_frame = meta_lineage_reference_merge[meta_lineage_reference_merge["covv_collection_date"] < meta_lineage_reference_merge["reference_date"]]
     if len(test_frame) > 0:
         print(test_frame)
