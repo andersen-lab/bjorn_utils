@@ -177,11 +177,10 @@ if __name__ == "__main__":
 
     # check Pangolin lineage timings for the current set of sequences
     subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
-    lineage_report = pd.read_csv("lineage_report.csv")[['taxon', "scorpio_call"]]
+    lineage_report = pd.read_csv("../lineage_reference.csv")[['taxon', "scorpio_call"]]
     metadata_reduced = data[["covv_virus_name", "covv_collection_date"]] 
     metadata_reduced["taxon"] = [item.split("/")[2] for item in metadata_reduced["covv_virus_name"]]
     meta_lineage_merge = metadata_reduced.merge(lineage_report, how="left", on="taxon")
-    print(os.path.join(sys.argv[1], "msa", "lineage_report.csv"))
     pango_df = pd.read_csv(os.path.join(sys.argv[1], "msa", "lineage_report.csv"))
     meta_lineage_reference_merge = meta_lineage_merge.merge(pango_df, how="left", on="scorpio_call")
     test_frame = meta_lineage_reference_merge[meta_lineage_reference_merge["covv_collection_date"] < meta_lineage_reference_merge["reference_date"]]
