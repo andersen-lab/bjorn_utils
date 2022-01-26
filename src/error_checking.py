@@ -14,6 +14,7 @@ def date_range_check(data: pd.DataFrame):
 def date_agreement_check(data: pd.DataFrame):
     # confirm that the years in the virus name match the year in the collection date
     data["virus_year"] = [item.split("/")[-1] for item in data["covv_virus_name"]]
+    data["covv_collection_date"] = pd.to_datetime(data["covv_collection_date"])
     data["collection_year"] = [str(item.year) for item in data["covv_collection_date"]]
     test_frame = data[~(data["virus_year"] == data["collection_year"])]
     if len(test_frame) > 0:
