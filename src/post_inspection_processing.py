@@ -17,6 +17,7 @@ import pandas as pd
 import subprocess
 from readme_update import main as readme_main
 from gsheet_interact import zipcode_interactor
+from error_checking import date_agreement_check, date_range_check
 
 def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisaid_uploader.log", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv") -> None:
     """
@@ -156,29 +157,14 @@ if __name__ == "__main__":
     gisaid_fasta = combined_unaligned_fasta
     gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
 
-    #TODO: Add checking to make sure mark didn't switch the virus number and id like jc
-
-    # confirm that all dates are between 1/1/2020 and today
-    date_range = pd.Series(pd.date_range('2020-1-1', pd.to_datetime("today")))
-    data = pd.read_csv(gisaid_metadata)
-    data["covv_collection_date"] = pd.to_datetime(data["covv_collection_date"])
-    test_frame = data[~data["covv_collection_date"].isin(date_range)]
-    if len(test_frame) > 0:
-        print(test_frame)
-        raise Exception("Error: metadata date range out of assigned limits - check metadata")
-
-    # confirm that the years in the virus name match the year in the collection date
-    data["virus_year"] = [item.split("/")[-1] for item in data["covv_virus_name"]]
-    data["collection_year"] = [str(item.year) for item in data["covv_collection_date"]]
-    test_frame = data[~(data["virus_year"] == data["collection_year"])]
-    if len(test_frame) > 0:
-        print(test_frame)
-        raise Exception("Error: collection year does not match year assigned to samples - check metadata")
+    # check date ranges
+    date_agreement_check(pd.read_csv(gisaid_metadata))
+    date_range_check(pd.read_csv(gisaid_metadata))
 
     # check Pangolin lineage timings for the current set of sequences
     subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
     lineage_report = pd.read_csv(os.path.join(sys.argv[1], "msa", "lineage_report.csv"))[['taxon', "scorpio_call"]]
-    metadata_reduced = data[["covv_virus_name", "covv_collection_date"]] 
+    metadata_reduced = pd.read_csv(gisaid_metadata)[["covv_virus_name", "covv_collection_date"]] 
     metadata_reduced["taxon"] = [item.split("/")[2] for item in metadata_reduced["covv_virus_name"]]
     meta_lineage_merge = metadata_reduced.merge(lineage_report, how="left", on="taxon")
     pango_df = pd.read_csv("../lineage_reference.csv")
@@ -190,7 +176,7 @@ if __name__ == "__main__":
         print(test_frame)
         raise Exception("Error: lineage appears before reference start date - check metadata and sequences")
 
-    # now that date checks are complete, we can commense with the actual upload
+    # now that pangolin checks are complete, we can start gisaid upload
     # actual gisaid upload
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
     subprocess.run(["./gisaid_uploader", 

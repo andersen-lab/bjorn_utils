@@ -82,9 +82,9 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
     converted_meta_df = pd.DataFrame()
     for key in column_mapping:
         converted_meta_df[column_mapping[key]] = new_meta_df[key]
-    #TODO: covv_comment and comment_type need to be empty string here
     na_cols = ['covv_gender','covv_patient_age','covv_patient_status', 'covv_sampling_strategy']
     empty_cols = ["covv_comment", "comment_type"]
+    #TODO: If covv_passage to have "Original" if blank or string = "N/A"
     for col in na_cols:
         converted_meta_df[col] = "N/A"
     for col in empty_cols:
@@ -380,6 +380,8 @@ if __name__=="__main__":
         seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
     else:
         seqsum = pd.read_csv(args.sample_sheet)
+    #TODO: implement date range, sample name, and other checks here
+
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
