@@ -13,7 +13,7 @@ import mutations as bm
 import json
 
 from gsheet_interact import gisaid_interactor
-
+from error_checking import date_agreement_check, date_range_check
 
 ## FUNCTION DEFINTIONS
 def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
@@ -380,8 +380,6 @@ if __name__=="__main__":
         seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
     else:
         seqsum = pd.read_csv(args.sample_sheet)
-    #TODO: implement date range, sample name, and other checks here
-
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
@@ -413,6 +411,9 @@ if __name__=="__main__":
     released_seqs = meta_df['sample_id'].unique()
     # filter out released samples from all the samples we got
     final_result = sequence_results[~sequence_results['sample_id'].isin(released_seqs)]
+    # check date ranges
+    date_agreement_check(pd.read_csv(seqsum))
+    date_range_check(pd.read_csv(seqsum))
     # final_result = sequence_results.copy()
     print(f"Preparing {final_result.shape[0]} samples for release")
     # ## Getting coverage information

@@ -17,7 +17,7 @@ import pandas as pd
 import subprocess
 from readme_update import main as readme_main
 from gsheet_interact import zipcode_interactor
-from error_checking import date_agreement_check, date_range_check
+
 
 def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisaid_uploader.log", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv") -> None:
     """
@@ -156,10 +156,6 @@ if __name__ == "__main__":
     #TODO: Add some kind of logging that allows us to understand what we have done so far for a bjorn folder
     gisaid_fasta = combined_unaligned_fasta
     gisaid_metadata = os.path.join(sys.argv[1], "gisaid_metadata.csv")
-
-    # check date ranges
-    date_agreement_check(pd.read_csv(gisaid_metadata))
-    date_range_check(pd.read_csv(gisaid_metadata))
 
     # check Pangolin lineage timings for the current set of sequences
     subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
