@@ -13,7 +13,7 @@ import mutations as bm
 import json
 
 from gsheet_interact import gisaid_interactor
-from error_checking import date_agreement_check, date_range_check
+from error_checking import date_agreement_check, date_range_check, sample_id_check
 
 ## FUNCTION DEFINTIONS
 def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
@@ -414,6 +414,7 @@ if __name__=="__main__":
     # check date ranges
     date_agreement_check(seqsum)
     date_range_check(seqsum)
+    sample_id_check(seqsum)
     # final_result = sequence_results.copy()
     print(f"Preparing {final_result.shape[0]} samples for release")
     # ## Getting coverage information
