@@ -412,8 +412,8 @@ if __name__=="__main__":
     # filter out released samples from all the samples we got
     final_result = sequence_results[~sequence_results['sample_id'].isin(released_seqs)]
     # check date ranges
-    date_agreement_check(pd.read_csv(seqsum))
-    date_range_check(pd.read_csv(seqsum))
+    date_agreement_check(seqsum)
+    date_range_check(seqsum)
     # final_result = sequence_results.copy()
     print(f"Preparing {final_result.shape[0]} samples for release")
     # ## Getting coverage information
