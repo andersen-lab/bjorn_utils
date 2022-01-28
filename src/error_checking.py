@@ -2,7 +2,7 @@ import pandas as pd
 
 def process_id(x):
     "Utility function to process sample IDs to fix inconsistencies in the format"
-    return ''.join(x.split('-')[:2])
+    return ''.join(x.split('-')[-2:])
 
 def date_range_check(data: pd.DataFrame):
     # confirm that all dates are between 1/1/2020 and today
