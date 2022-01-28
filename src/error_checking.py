@@ -16,7 +16,7 @@ def date_agreement_check(data: pd.DataFrame):
     # confirm that the years in the virus name match the year in the collection date
     data["virus_year"] = [item.split("/")[-1] for item in data["Virus name"]]
     data["Collection date"] = pd.to_datetime(data["Collection date"])
-    data["collection_year"] = [str(item.year) for item in data["Collection date"]]]]
+    data["collection_year"] = [str(item.year) for item in data["Collection date"]]
     test_frame = data[~(data["virus_year"] == data["collection_year"])]
     if len(test_frame) > 0:
         print(test_frame)
