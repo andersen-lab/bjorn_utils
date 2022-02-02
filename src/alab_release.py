@@ -379,7 +379,7 @@ if __name__=="__main__":
     if args.sample_sheet == "":
         seqsum = gisaid_interactor("/home/al/code/bjorn_utils/bjorn.ini", 'current')
     else:
-        seqsum = pd.read_csv(args.sample_sheet)
+        seqsum = pd.read_csv(args.sample_sheet).rename(columns={"Address.1" : "Submitting Lab Address"})
     # clean up
     seqsum = seqsum[(~seqsum['SEARCH SampleID'].isna()) & (seqsum['SEARCH SampleID']!='#REF!')]
     # consolidate sample ID format
