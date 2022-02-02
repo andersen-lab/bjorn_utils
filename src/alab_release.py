@@ -245,6 +245,8 @@ def process_id(x):
 ## MAIN
 
 if __name__=="__main__":
+    # git pull
+    subprocess.run(["git", "-C", "/home/al/code/HCoV-19-Genomics", "pull"])
     # Input Parameters
     # COLUMNS TO INCLUDE IN GITHUB METADATA
     git_meta_cols = ["ID", "collection_date", "location", "percent_coverage_cds", "Coverage", "authors", "originating_lab", "fasta_hdr"]
