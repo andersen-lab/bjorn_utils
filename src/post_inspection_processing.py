@@ -16,7 +16,7 @@ from Bio import SeqIO
 import pandas as pd
 import subprocess
 from readme_update import main as readme_main
-from gsheet_interact import zipcode_interactor
+from gsheet_interact import gisaid_interactor, zipcode_interactor
 
 
 def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisaid_uploader.log", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv") -> None:
@@ -57,12 +57,11 @@ def merge_zipcodes(local_file_path: str = "", metadata_path: str = "/home/al/cod
     # generate a dataframe with these two columns
     if local_file_path == "" :
         df = zipcode_interactor(config_key_path).rename(
-            columns={"Zipcode": "zipcode", "SEARCH SampleID": "ID"}
-            )
+            columns={"Zipcode": "zipcode", "SEARCH SampleID": "ID"}).drop_duplicates()
     else:
         df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]]
     # read metadata file
-    metadata = pd.read_csv(metadata_path)
+    metadata = pd.read_csv(metadata_path).drop(columns=["Unnamed: 0"])
     column_order = metadata.columns.to_list()
     # sort for the metadata where gisaid_id is missing
     missing_zipcodes = metadata[metadata["zipcode"].isna()].drop(columns=["zipcode"])
@@ -74,6 +73,33 @@ def merge_zipcodes(local_file_path: str = "", metadata_path: str = "/home/al/cod
     # write new_metadata to disk
     new_metadata.to_csv(metadata_path, index=False)
     return
+
+def merge_hosts(local_file_path: str = "", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/home/al/code/bjorn_utils/bjorn.ini") -> None:
+    """
+    Takes a log file and uses the returned gisaid ids to update the metadata
+    stored in the HCoV-19-Genomics repository - can be modified to update other
+    metadata files in future iterations 
+    """
+    # generate a dataframe with these two columns
+    if local_file_path == "" :
+        df = gisaid_interactor(config_key_path).rename(
+            columns={"Host": "host", "SEARCH SampleID": "ID"})[["host", "ID"]].drop_duplicates()
+    else:
+        df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]]
+    # read metadata file
+    metadata = pd.read_csv(metadata_path).drop(columns=["Unnamed: 0"])
+    column_order = metadata.columns.to_list()
+    # sort for the metadata where gisaid_id is missing
+    missing_host = metadata[metadata["host"].isna()].drop(columns=["host"])
+    not_missing_host = metadata[~metadata["host"].isna()]
+    # merge data
+    merged = missing_host.merge(df, how='left', on="ID")
+    # reset column order and return
+    new_metadata = pd.concat([not_missing_host, merged[column_order]])
+    # write new_metadata to disk
+    new_metadata.to_csv(metadata_path, index=False)
+    return
+
 
 def concat_fastas(file_1: str, file_2: str, combined_aligned_fasta: str) -> None:
     """
@@ -199,6 +225,14 @@ if __name__ == "__main__":
         merge_zipcodes()
     else:
         raise Exception("Merge zipcodes received incorrect number of arguments")
+
+    # merge host data
+    if len(sys.argv) == 3:
+        merge_hosts(local_file_path=sys.argv[2])
+    elif len(sys.argv) == 2:
+        merge_hosts()
+    else:
+        raise Exception("Merge hosts received incorrect number of arguments")
 
     #TODO: Run pangolin on the whole dataset here vs separately in the pangolin script
     subprocess.run(["./update_pangolineages.sh"])
