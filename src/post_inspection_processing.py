@@ -59,7 +59,7 @@ def merge_zipcodes(local_file_path: str = "", metadata_path: str = "/home/al/cod
         df = zipcode_interactor(config_key_path).rename(
             columns={"Zipcode": "zipcode", "SEARCH SampleID": "ID"}).drop_duplicates()
     else:
-        df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]]
+        df = pd.read_csv(local_file_path).rename(columns={"Additional location information": "zipcode", "SEARCH SampleID": "ID"})[["zipcode", "ID"]].drop_duplicates()
     # read metadata file
     metadata = pd.read_csv(metadata_path)
     column_order = metadata.columns.to_list()
@@ -85,7 +85,7 @@ def merge_hosts(local_file_path: str = "", metadata_path: str = "/home/al/code/H
         df = gisaid_interactor(config_key_path).rename(
             columns={"Host": "host", "SEARCH SampleID": "ID"})[["host", "ID"]].drop_duplicates()
     else:
-        df = pd.read_csv(local_file_path).rename(columns={"Host": "host", "SEARCH SampleID": "ID"})[["host", "ID"]]
+        df = pd.read_csv(local_file_path).rename(columns={"Host": "host", "SEARCH SampleID": "ID"})[["host", "ID"]].drop_duplicates()
     # read metadata file
     metadata = pd.read_csv(metadata_path)
     column_order = metadata.columns.to_list()
