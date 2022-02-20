@@ -237,6 +237,9 @@ if __name__ == "__main__":
     #TODO: Run pangolin on the whole dataset here vs separately in the pangolin script
     subprocess.run(["./update_pangolineages.sh"])
 
+    # Push changes to the github repo
+    subprocess.run(["./push_git_changes.sh"])
+
     #TODO: Fix errors here
     # update the readme in the github folder
     # readme_main("/home/al/code/HCoV-19-Genomics/")
