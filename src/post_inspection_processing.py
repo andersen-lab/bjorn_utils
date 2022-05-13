@@ -240,6 +240,5 @@ if __name__ == "__main__":
     # Push changes to the github repo
     subprocess.run(["./push_git_changes.sh"])
 
-    #TODO: Fix errors here
     # update the readme in the github folder
-    # readme_main("/home/al/code/HCoV-19-Genomics/")
+    readme_main("/home/al/code/HCoV-19-Genomics/")
