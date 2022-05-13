@@ -22,22 +22,20 @@ def generate_location_summary_table(
     locations = pd.DataFrame(df.location.value_counts()).dropna()
     locations.index.rename("Location", inplace=True)
     locations.rename(columns={"location": "Number of Sequences"}, inplace=True)
-    # combine values together based on location_combination_config
-    # this takes values of similar locations and combines their sequence counts
-    consolidation_config = pd.read_csv(
-        location_combination_config, index_col=0)
-    merged_location_data = locations.merge(
-        consolidation_config, how="left", left_index=True, right_index=True
-    ).reset_index(drop=True)
+    location_dict = locations.to_dict(orient='index')
+    for key in location_dict: 
+        location_dict[key]["corrected_location"] = "/".join(key.split("/")[1:])
+    cleaned_locations = pd.Dataframe_from_dict(location_dict, orient='index').reset_index(drop=True)
     consolidated_location_data = (
-        merged_location_data.groupby(["corrected_location"], as_index=False)
+        cleaned_locations.groupby(["corrected_location"], as_index=False)
         .agg({"Number of Sequences": "sum"})
         .rename(columns={"corrected_location": "Location"})
         .set_index("Location")
         .sort_index(kind="stable")
     )
     # write dataframe to a a markdown table
-    consolidated_location_data.to_markdown(out_file)
+    with open(out_file, "w") as out:
+        out.write(consolidated_location_data.to_markdown())
     return
 
 
