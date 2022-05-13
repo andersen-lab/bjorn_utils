@@ -25,7 +25,7 @@ def generate_location_summary_table(
     location_dict = locations.to_dict(orient='index')
     for key in location_dict: 
         location_dict[key]["corrected_location"] = "/".join(key.split("/")[1:])
-    cleaned_locations = pd.Dataframe_from_dict(location_dict, orient='index').reset_index(drop=True)
+    cleaned_locations = pd.Dataframe.from_dict(location_dict, orient='index').reset_index(drop=True)
     consolidated_location_data = (
         cleaned_locations.groupby(["corrected_location"], as_index=False)
         .agg({"Number of Sequences": "sum"})
