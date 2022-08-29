@@ -425,6 +425,7 @@ def gofasta_align(fasta_filepaths, indiv_out_filepath, out_filepath):
         run_command(pwa_cmd)
         with open(out_file, "r") as input:
             lines = input.readlines()
+            print(lines)
             data = lines[2].split("\t")
             combined_output.append(data[0])
             combined_output.append(data[9])
