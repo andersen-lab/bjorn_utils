@@ -9,7 +9,7 @@ import pandas as pd
 from Bio import SeqIO, AlignIO, Align
 
 from path import Path
-
+import os
 
 def get_variant_counts(
     analysis_filepath: str,
@@ -420,7 +420,7 @@ def gofasta_align(fasta_filepaths, indiv_out_filepath, out_filepath):
     combined_output = []
     for file in files:
         out_file = indiv_out_filepath / file.basename()
-        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {file} | gofasta sam topa > {out_file}"
+        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {os.path.abspath(file)} | gofasta sam topa > {out_file}"
         run_command(pwa_cmd)
         with open(out_file, "r") as input:
             lines = input.readlines()
