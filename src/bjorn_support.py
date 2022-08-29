@@ -417,20 +417,20 @@ def gofasta_align(fasta_filepaths, indiv_out_filepath, out_filepath):
     """
     # get the files that we need to align and then perform pwa keeping the insertions
     files = [Path(os.path.abspath(filepath)) for filepath in glob.glob(fasta_filepaths / "*.fa")]
-    combined_output = []
     for file in files:
-        out_file = indiv_out_filepath / file.basename()
-        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {file} | gofasta sam topa > {out_file}"
+        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {file} | gofasta sam toPairAlign -r /home/gk/code/hCoV19/db/NC045512.fasta -o {indiv_out_filepath}"
         print(pwa_cmd)
         run_command(pwa_cmd)
-        with open(out_file, "r") as input:
-            lines = input.readlines()
-            data = lines[2].split("\t")
-            combined_output.append(data[0])
-            combined_output.append(data[9])
     # write out the combined output var to an aligned, combined fasta file
-    with open(out_filepath, "w") as output:
-        output.writelines(combined_output)
+    #TODO: Cat the individual fasta files together while dropping the first sequence
+    aligned_files = glob.glob(indiv_out_filepath / "*.fasta")
+    for aligned_file in aligned_files:
+        records = SeqIO.parse(aligned_file, "fasta")
+        next(records)
+        seq = next(records)
+        # write the second record which is our actual file
+        with open(out_filepath, "a") as output:
+            output.write(SeqIO.FastaIO.as_fasta_2line(seq))
     return out_filepath
 
 
