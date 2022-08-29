@@ -8,6 +8,8 @@ import gzip
 import pandas as pd
 from Bio import SeqIO, AlignIO, Align
 
+from path import Path
+
 
 def get_variant_counts(
     analysis_filepath: str,
@@ -406,19 +408,28 @@ def align_fasta(fasta_filepath, out_filepath, num_cpus=8):
     run_command(msa_cmd)
     return out_filepath
 
-
-def gofasta_align(fasta_filepaths, out_filepath):
+def gofasta_align(fasta_filepaths, indiv_out_filepath, out_filepath):
     """
     Gets a combined fasta file with all the sequences
     Pairwise aligns them against the reference, preserving insertions
     Writes this file to disk so it can be used to separate the suspicious mutations
     Then finally goes back and combines all those files into one for further inspection
     """
-    path_to_reference = "/home/gk/code/hCoV19/db/NC045512.fasta"
-    for fasta_filepath in glob.glob(fasta_filepaths / "*.fa"):
-        out_filepath = 
-        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 {path_to_reference} {fasta_filepath} | gofasta sam toma > {out_filepath}"
-    run_command(pwa_cmd)
+    # get the files that we need to align and then perform pwa keeping the insertions
+    files = [Path(filepath) for filepath in glob.glob(fasta_filepaths / "*.fa")]
+    combined_output = []
+    for file in files:
+        out_file = indiv_out_filepath / file.basename()
+        pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {file} | gofasta sam topa > {out_file}"
+        run_command(pwa_cmd)
+        with open(out_file, "r") as input:
+            lines = input.readlines()
+            data = lines[2].split("\t")
+            combined_output.append(data[0])
+            combined_output.append(data[9])
+    # write out the combined output var to an aligned, combined fasta file
+    with open(out_filepath, "w") as output:
+        output.writelines(combined_output)
     return out_filepath
 
 

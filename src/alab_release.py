@@ -672,12 +672,6 @@ if __name__ == "__main__":
             Path.mkdir(msa_dir)
         seqs_dir = Path(out_dir / "fa")
         copy(ref_path, seqs_dir)
-        # TODO: Avoid concatenation here as
-        seqs_fp = bs.concat_fasta(seqs_dir, msa_dir / out_dir.basename())
-        print(seqs_fp)
-        # load concatenated sequences
-        cns_seqs = SeqIO.parse(msa_dir / out_dir.basename() + ".fa", "fasta")
-        cns_seqs = list(cns_seqs)
         # generate files containing metadata for Github, GISAID, GenBank
         # GitHub metadata for all samples (out_dir/metadata.csv)
         git_meta_df = create_github_meta(
@@ -687,10 +681,13 @@ if __name__ == "__main__":
         gisaid_meta_df = create_gisaid_meta(ans.copy(), gisaid_meta_cols)
         # generate pairwise sequence alignment
         msa_fp = msa_dir / out_dir.basename() + "_aligned.fa"
+        msa_fp_indiv = msa_dir / "aligned_consensus_sequences"
+        if not Path.isdir(msa_fp_indiv):
+            Path.mkdir(msa_fp_indiv)
         if not Path.isfile(Path(msa_fp)):
             # TODO: Write gofasta_align such that it takes the individual files,
             #      aligns them, then creates a concatenated version
-            msa_fp = bs.gofasta_align(seqs_dir, msa_fp)
+            msa_fp = bs.gofasta_align(seqs_dir, msa_fp_indiv, msa_fp)
         meta_fp = out_dir / "metadata.csv"
         # load pairwise sequence alignment
         # TODO: Need to confirm this works with pairwise alignment as well
