@@ -685,14 +685,13 @@ if __name__ == "__main__":
         if not Path.isdir(msa_fp_indiv):
             Path.mkdir(msa_fp_indiv)
         if not Path.isfile(Path(msa_fp)):
-            # TODO: Write gofasta_align such that it takes the individual files,
-            #      aligns them, then creates a concatenated version
             msa_fp = bs.gofasta_align(seqs_dir, msa_fp_indiv, msa_fp)
         meta_fp = out_dir / "metadata.csv"
         # load pairwise sequence alignment
         # TODO: Need to confirm this works with pairwise alignment as well
-        msa_data = bs.load_fasta(msa_fp, is_aligned=True)
+        msa_data = bs.load_fasta(msa_fp, is_aligned=False)
         # identify insertions
+        #TODO: Swap all methods below for pairwise alignment based
         insertions = bm.identify_insertions(
             msa_data,
             meta_fp=meta_fp,
@@ -750,7 +749,7 @@ if __name__ == "__main__":
             bs.load_fasta(msa_fp, is_aligned=True),
             sus_ids=sus_ids,
             out_dir=msa_dir,
-            filename=seqs_fp.split(".")[0],
+            filename=out_dir.basename(),
         )
         # generate compressed report containing main results
         bs.generate_release_report(out_dir)

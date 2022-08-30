@@ -113,14 +113,16 @@ def separate_alignments(
             poor_seqs.append(rec)
         else:
             good_seqs.append(rec)
-    good_msa = Align.MultipleSeqAlignment(good_seqs)
+    #TODO: Change MSA Here
+    # good_msa = Align.MultipleSeqAlignment(good_seqs)
     good_msa_fn = filename + "_aligned_white.fa"
     good_msa_fp = out_dir / good_msa_fn
-    AlignIO.write(good_msa, good_msa_fp, "fasta")
-    poor_msa = Align.MultipleSeqAlignment(poor_seqs)
+    SeqIO.write(good_seqs, good_msa_fp, "fasta")
+    #TODO: Change MSA Here
+    # poor_msa = Align.MultipleSeqAlignment(poor_seqs)
     poor_msa_fn = filename + "_aligned_inspect.fa"
     poor_msa_fp = out_dir / poor_msa_fn
-    AlignIO.write(poor_msa, poor_msa_fp, "fasta")
+    SeqIO.write(poor_seqs, poor_msa_fp, "fasta")
     return 0
 
 
@@ -419,18 +421,26 @@ def gofasta_align(fasta_filepaths, indiv_out_filepath, out_filepath):
     files = [Path(os.path.abspath(filepath)) for filepath in glob.glob(fasta_filepaths / "*.fa")]
     for file in files:
         pwa_cmd = f"minimap2 -a -x asm20 --score-N=0 /home/gk/code/hCoV19/db/NC045512.fasta {file} | gofasta sam toPairAlign -r /home/gk/code/hCoV19/db/NC045512.fasta -o {indiv_out_filepath}"
-        print(pwa_cmd)
         run_command(pwa_cmd)
     # write out the combined output var to an aligned, combined fasta file
     #TODO: Cat the individual fasta files together while dropping the first sequence
+    i = 0
     aligned_files = glob.glob(indiv_out_filepath / "*.fasta")
     for aligned_file in aligned_files:
         records = SeqIO.parse(aligned_file, "fasta")
-        next(records)
-        seq = next(records)
-        # write the second record which is our actual file
-        with open(out_filepath, "a") as output:
-            output.write(SeqIO.FastaIO.as_fasta_2line(seq))
+        if i == 0:
+            seq = next(records)
+            with open(out_filepath, "a") as output:
+                output.write(SeqIO.FastaIO.as_fasta_2line(seq))
+            seq = next(records)
+            with open(out_filepath, "a") as output:
+                output.write(SeqIO.FastaIO.as_fasta_2line(seq))
+            i += 1
+        else:
+            next(records)
+            seq = next(records)
+            with open(out_filepath, "a") as output:
+                output.write(SeqIO.FastaIO.as_fasta_2line(seq))
     return out_filepath
 
 
