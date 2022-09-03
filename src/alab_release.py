@@ -746,7 +746,7 @@ if __name__ == "__main__":
             ans.copy(), out_dir, sus_ids, include_bams=include_bams, ncpus=num_cpus
         )
         bs.separate_alignments(
-            bs.load_fasta(msa_fp, is_aligned=True),
+            bs.load_fasta(msa_fp, is_aligned=False),
             sus_ids=sus_ids,
             out_dir=msa_dir,
             filename=out_dir.basename(),
