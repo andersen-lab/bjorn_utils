@@ -689,32 +689,48 @@ if __name__ == "__main__":
         meta_fp = out_dir / "metadata.csv"
         # load pairwise sequence alignment
         # TODO: Need to confirm this works with pairwise alignment as well
-        msa_data = bs.load_fasta(msa_fp, is_aligned=False)
+        # msa_data = bs.load_fasta(msa_fp, is_aligned=False)
         # identify insertions
         #TODO: Swap all methods below for pairwise alignment based
-        insertions = bm.identify_insertions(
-            msa_data,
-            meta_fp=meta_fp,
-            patient_zero=patient_zero,
-            min_ins_len=1,
-            data_src="alab",
-        )
+        # get a list of all the consensus sequence files
+        consensus_files = glob.glob(f"{msa_fp_indiv}/*.fasta")
+        insertion_frame_list = [
+            bm.identify_insertions(
+                bs.load_fasta(seq_fp, is_aligned=False), 
+                meta_fp=meta_fp,
+                patient_zero=patient_zero,
+                min_ins_len=1,
+                data_src="alab",
+            )
+            for seq_fp in consensus_files]
+        insertions = pd.concat(insertion_frame_list)
         # save insertion results to file
         insertions.to_csv(out_dir / "insertions.csv", index=False)
         # identify substitution mutations
-        substitutions = bm.identify_replacements(
-            msa_data, meta_fp=meta_fp, data_src="alab", patient_zero=patient_zero
-        )
+        substitution_frame_list = [
+            bm.identify_replacements(
+                bs.load_fasta(seq_fp, is_aligned=False),
+                meta_fp=meta_fp,
+                data_src="alab",
+                patient_zero=patient_zero
+            )
+            for seq_fp in consensus_files
+        ]
+        substitutions = pd.concat(substitution_frame_list)
         # save substitution results to file
         substitutions.to_csv(out_dir / "replacements.csv", index=False)
         # identify deletions
-        deletions = bm.identify_deletions(
-            msa_data,
-            meta_fp=meta_fp,
-            data_src="alab",
-            patient_zero=patient_zero,
-            min_del_len=1,
-        )
+        deletion_frame_list = [
+            bm.identify_deletions(
+                bs.load_fasta(seq_fp, is_aligned=False),
+                meta_fp=meta_fp,
+                data_src="alab",
+                patient_zero=patient_zero,
+                min_del_len=1
+            )
+            for seq_fp in consensus_files
+        ]
+        deletions = pd.concat(deletion_frame_list)
         # save deletion results to file
         deletions.to_csv(out_dir / "deletions.csv", index=False)
         # identify samples with suspicious INDELs and/or substitutions
