@@ -16,6 +16,14 @@ conda activate bjorn_utils
 * Install datafunk (inside the activated environment): [instructions (ensure environment is activated during installation)](https://github.com/cov-ert/datafunk)
 
 ## Usage
+
+Current stable branch is "msa_workflow", use all below instructions on that branch.
+
+"pairwise_alignment_workflow" needs major rework to address the following:
+- Sporadic errors in loading reference sequence
+- Need to check aligned sequence for changes, not reference
+- Need to check without regard for sequence length, and using new gene reference system as lengths can vary
+
 ### Post-processing of SARS-CoV-2 Sequencing Results for Release to public databases
 * Activate `bjorn` environment
 ```bash
