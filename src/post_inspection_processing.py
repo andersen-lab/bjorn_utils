@@ -7,7 +7,7 @@ separate package elements
 """
 
 from cgi import test
-from curses import meta
+# from curses import meta
 from datetime import date
 from logging import raiseExceptions
 import os
@@ -17,6 +17,7 @@ import pandas as pd
 import subprocess
 from readme_update import main as readme_main
 from gsheet_interact import gisaid_interactor, zipcode_interactor
+import glob
 
 
 def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisaid_uploader.log", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv") -> None:
@@ -134,7 +135,7 @@ def multifasta_to_fasta(combined_unaligned_fasta: str) -> None:
     """
     # create new directory for consensus sequences
     base_dir = os.path.dirname(combined_unaligned_fasta)
-    cons_dir = os.path.join(base_dir, "consensus_sequences")
+    cons_dir = os.path.join(os.path.dirname(base_dir), "consensus_sequences")
     if not os.path.exists(cons_dir):
         os.mkdir(cons_dir)
     # generate a separated fasta file for each sequence
@@ -168,15 +169,47 @@ if __name__ == "__main__":
     Second argument can be the location of the metadata file from which to pull zipcodes
     #TODO: Allow this to take location of the HCoV-19-Genomics folder as an argument throughout
     """
-    white_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_white.fa")
-    inspect_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_aligned_inspect.fa")
-    combined_aligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_aligned.fa")
     combined_unaligned_fasta = os.path.join(sys.argv[1], "msa", sys.argv[1].split("/")[2] + "_combined_unaligned.fa")
-    
-    # concat, unalign, and multifasta to fasta consensus sequences
-    concat_fastas(white_fasta, inspect_fasta, combined_aligned_fasta)
-    unalign_fasta(combined_aligned_fasta, combined_unaligned_fasta)
-    multifasta_to_fasta(combined_unaligned_fasta)
+
+    # directory for unaligned sequences
+    unaligned_fp = os.path.join(sys.argv[1], "msa", "combined_unaligned")
+    if not os.path.exists(unaligned_fp):
+        os.mkdir(unaligned_fp)
+    # unalign and convert to consensus sequences
+    # inspected files
+    inspect_fp = os.path.join(sys.argv[1], "msa", "aligned_inspect")
+    inspect_files = glob.glob(f"{inspect_fp}/*.fa")
+    for file in inspect_files:
+        sample_name = os.path.basename(file).split('.')[0]
+        sample_fp = os.path.join(unaligned_fp, sample_name + "_unaligned.fa")
+        unalign_fasta(file, sample_fp)
+        multifasta_to_fasta(sample_fp)
+    # whitelisted files
+    white_fp = os.path.join(sys.argv[1], "msa", "aligned_white")
+    white_files = glob.glob(f"{white_fp}/*.fa")
+    for file in white_files:
+        sample_name = os.path.basename(file).split('.')[0]
+        sample_fp = os.path.join(unaligned_fp, sample_name + "_unaligned.fa")
+        unalign_fasta(file, sample_fp)
+        multifasta_to_fasta(sample_fp)
+    # corrected files
+    corrected_fp = os.path.join(sys.argv[1], "msa", "aligned_corrected")
+    corrected_files = glob.glob(f"{corrected_fp}/*.fa")
+    for file in corrected_files:
+        sample_name = os.path.basename(file).split('.')[0]
+        sample_fp = os.path.join(unaligned_fp, sample_name + "_unaligned.fa")
+        unalign_fasta(file, sample_fp)
+        multifasta_to_fasta(sample_fp)
+
+    cons_fp = os.path.join(sys.argv[1], "msa", "consensus_sequences")
+    cons_files = glob.glob(f"{cons_fp}/*.fasta")
+    # write consensus sequences to combined unaligned fasta from consensus sequences
+    # used for gisaid upload
+    with open(combined_unaligned_fasta, "w") as outfile:
+        for file in cons_files:
+            with open(file, "r") as infile:
+                for line in infile:
+                    outfile.write(line)
 
     # upload to gisaid using the metadata in the folder and get the logs
     #TODO: Add some kind of logging that allows us to understand what we have done so far for a bjorn folder
@@ -186,7 +219,7 @@ if __name__ == "__main__":
     # check Pangolin lineage timings for the current set of sequences
     subprocess.run(["./update_pangolineages_subset.sh", os.path.join(sys.argv[1], "msa")])
     lineage_report = pd.read_csv(os.path.join(sys.argv[1], "msa", "lineage_report.csv"))[['taxon', "scorpio_call"]]
-    metadata_reduced = pd.read_csv(gisaid_metadata)[["covv_virus_name", "covv_collection_date"]] 
+    metadata_reduced = pd.read_csv(gisaid_metadata)[["covv_virus_name", "covv_collection_date"]]
     metadata_reduced["taxon"] = [item.split("/")[2] for item in metadata_reduced["covv_virus_name"]]
     meta_lineage_merge = metadata_reduced.merge(lineage_report, how="left", on="taxon")
     pango_df = pd.read_csv("../lineage_reference.csv")
@@ -201,14 +234,14 @@ if __name__ == "__main__":
     # now that pangolin checks are complete, we can start gisaid upload
     # actual gisaid upload
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
-    subprocess.run(["./gisaid_uploader", 
-                    "CoV", 
-                    "upload", 
-                    "--fasta", 
+    subprocess.run(["./gisaid_uploader",
+                    "CoV",
+                    "upload",
+                    "--fasta",
                     gisaid_fasta,
                     "--csv" ,
-                    gisaid_metadata, 
-                    "--failedout", 
+                    gisaid_metadata,
+                    "--failedout",
                     gisaid_failed_metadata]
                 )
 
