@@ -1,4 +1,5 @@
 import pandas as pd
+import path
 from path import Path
 from shutil import copy, move
 from Bio import SeqIO
@@ -15,6 +16,7 @@ import json
 from gsheet_interact import gisaid_interactor
 from error_checking import date_agreement_check, date_range_check, sample_id_check
 
+
 ## FUNCTION DEFINTIONS
 def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
     biosample_paths = glob.glob(f"{sra_dir}/*.txt")
@@ -30,11 +32,11 @@ def create_sra_meta(df: pd.DataFrame, sra_dir: Path):
         sra_merged[["Accession", "Sample Name", "file_name"]].to_csv(
             sra_dir / "sra_metadata.csv", index=False
         )
-    return f"SRA metadata saved in {sra_dir/'sra_metadata.csv'}"
+    return f"SRA metadata saved in {sra_dir / 'sra_metadata.csv'}"
 
 
 def assemble_genbank_release(
-    cns_seqs: list, df: pd.DataFrame, meta_cols: list, genbank_dir: Path
+        cns_seqs: list, df: pd.DataFrame, meta_cols: list, genbank_dir: Path
 ):
     # create directory for genbank release
     if not Path.isdir(genbank_dir):
@@ -46,11 +48,11 @@ def assemble_genbank_release(
         # generate sample metadata
         genbank_meta = create_genbank_meta(grp, meta_cols)
         genbank_meta.to_csv(
-            genbank_dir / f"genbank_metadata_{ctr+1}.tsv", sep="\t", index=False
+            genbank_dir / f"genbank_metadata_{ctr + 1}.tsv", sep="\t", index=False
         )
         # fetch consensus sequences of those samples
         recs = [i for i in cns_seqs if i.name in genbank_meta["Sequence_ID"].tolist()]
-        SeqIO.write(recs, genbank_dir / f"genbank_release_{ctr+1}.fa", "fasta")
+        SeqIO.write(recs, genbank_dir / f"genbank_release_{ctr + 1}.fa", "fasta")
     # write mapping of index to author for later reference
     (
         pd.DataFrame.from_dict(authors, orient="index")
@@ -89,7 +91,7 @@ def create_genbank_meta(df: pd.DataFrame, meta_cols: list) -> pd.DataFrame:
 
 
 def create_github_meta(
-    new_meta_df: pd.DataFrame, old_meta_filepath: str, meta_cols: list
+        new_meta_df: pd.DataFrame, old_meta_filepath: str, meta_cols: list
 ):
     """Generate Github metadata with updated information about newly released samples"""
     old_metadata = pd.read_csv(old_meta_filepath)
@@ -168,20 +170,20 @@ def get_ids(filepaths: list) -> list:
         # query = fp.basename().split('-')
         n = fp.basename()
         if n[:6] != "SEARCH":
-            n = n[n.find("SEARCH") :]
+            n = n[n.find("SEARCH"):]
         query = n.split("_")[0].split("-")
         if len(query) > 1:
             ids.append("".join(query[:2]))
         else:
             start_idx = fp.find("SEARCH")
-            ids.append(fp[start_idx : start_idx + 10])
+            ids.append(fp[start_idx: start_idx + 10])
     return ids
 
 
 def process_coverage_sample_ids(x):
     "Utility function to get a unified sample ID format from the coverage reports"
     if x[:6] != "SEARCH":
-        x = x[x.find("SEARCH") :]
+        x = x[x.find("SEARCH"):]
     query = x.split("/")
     if len(query) == 1:
         # query = fp.basename().split('_')[0].split('-')
@@ -190,7 +192,7 @@ def process_coverage_sample_ids(x):
         )  # Format could be SEARCH-xxxx-LOC or SEARCH-xxxx
     else:
         start_idx = x.find("SEARCH")
-        return x[start_idx : start_idx + 10]  # SEARCHxxxx
+        return x[start_idx: start_idx + 10]  # SEARCHxxxx
 
 
 def compress_files(filepaths: list, destination="/home/al/tmp2/fa/samples.tar.gz"):
@@ -202,11 +204,11 @@ def compress_files(filepaths: list, destination="/home/al/tmp2/fa/samples.tar.gz
 
 
 def retransfer_files(
-    filepaths: pd.DataFrame,
-    destination: str,
-    suspicious_sample_ids: list,
-    include_bams: bool = False,
-    ncpus: int = 1,
+        filepaths: pd.DataFrame,
+        destination: str,
+        suspicious_sample_ids: list,
+        include_bams: bool = False,
+        ncpus: int = 1,
 ):
     """Utility function to separate the consensus and BAM files of samples containing suspicious
     INDELs and/or substitutions from the remaining white-listed samples."""
@@ -290,7 +292,7 @@ def move_files(in_dir, out_dir, original_filepath):
 
 
 def transfer_files(
-    filepaths: pd.DataFrame, destination: str, include_bams=False, ncpus=1
+        filepaths: pd.DataFrame, destination: str, include_bams=False, ncpus=1
 ):
     "Utility function to copy consensus and BAM files of given samples from source to destination"
     filepaths = filepaths[["PATH_x", "PATH_y", "Virus name"]]
@@ -358,11 +360,54 @@ def process_id(x):
     return "".join(x.split("-")[:2])
 
 
+def edit_one_nuc(file: Path, row, sample_id, ref="NC_045512.2"):
+    """
+    Takes path of file to edit, dataframe row with mutation information, sample id,
+    and optional reference sequence. Edits fasta file at position specified in
+    row, either replacing a deletion with N, removing insertion, or replacing a stop
+    codon with N.
+    Assumes mutation is 1 nucleotide.
+    """
+    # get sequences and type of mutation
+    for rec in SeqIO.parse(file, 'fasta'):
+        if rec.id == ref:
+            ref_seq = rec.seq
+        if rec.id == sample_id:
+            seq_id = rec.id
+            sequence = rec.seq
+    sequence = str(sequence)
+    ref_seq = str(ref_seq)
+    type = row['type']
+
+    # find mutation position
+    if pd.isna(row['pos']) and pd.notna(row['absolute_coords']):
+        pos = int(row['absolute_coords'].split(':')[0])
+    elif pd.isna(row['absolute_coords']) and pd.notna(row['pos']):
+        pos = int(row['pos'])
+    else:
+        raise Exception("Position or Coordinates not found for mutation: {}".format(row['mutation']))
+
+    # number of insertions before pos
+    num_insertions = ref_seq.count('-', 0, pos)
+
+    if type == 'deletion' or type == 'substitution':
+        sequence = sequence[:pos - 1 + num_insertions] + 'N' + sequence[pos + num_insertions:]
+    elif type == 'insertion':
+        ref_seq = ref_seq[:pos + num_insertions] + ref_seq[pos + num_insertions + 1:]
+        sequence = sequence[:pos + num_insertions] + sequence[pos + num_insertions + 1:]
+    else:
+        raise Exception("Type of mutation not recognized for {}".format(row['mutation']))
+    # write edited sequence to file
+    with open(file, "w") as f:
+        f.write(">" + ref + "\n" + ref_seq + "\n")
+        f.write(">" + seq_id + "\n" + sequence)
+
+
 ## MAIN
 
 if __name__ == "__main__":
     # git pull
-    subprocess.run(["git", "-C", "/home/al/code/HCoV-19-Genomics", "pull"])
+    # subprocess.run(["git", "-C", "/home/al/code/HCoV-19-Genomics", "pull"])
     # Input Parameters
     # COLUMNS TO INCLUDE IN GITHUB METADATA
     git_meta_cols = [
@@ -571,7 +616,7 @@ if __name__ == "__main__":
     # clean up
     seqsum = seqsum[
         (~seqsum["SEARCH SampleID"].isna()) & (seqsum["SEARCH SampleID"] != "#REF!")
-    ]
+        ]
     # consolidate sample ID format
     seqsum.loc[:, "sample_id"] = seqsum["SEARCH SampleID"].apply(process_id)
     seqsum.drop_duplicates(subset=["sample_id"], keep="last", inplace=True)
@@ -611,7 +656,7 @@ if __name__ == "__main__":
     date_agreement_check(seqsum)
     date_range_check(seqsum)
     sample_id_check(seqsum)
-    # final_result = sequence_results.copy()
+    final_result = sequence_results.copy()
     print(f"Preparing {final_result.shape[0]} samples for release")
     # ## Getting coverage information
     cov_filepaths = bs.get_filepaths(
@@ -628,7 +673,7 @@ if __name__ == "__main__":
     print(cov_df[cov_df["SAMPLE"].isna()]["path"].tolist())
     cov_df.loc[:, "sample_id"] = cov_df["SAMPLE"].apply(process_coverage_sample_ids)
     cov_df.loc[:, "date"] = cov_df["path"].apply(
-        lambda x: "".join(x.split("/")[4].split(".")[:3])
+        lambda x: "".join(x.replace("\\", "/").split("/")[4].split(".")[:3])
     )
     cov_df = cov_df.sort_values("date").drop_duplicates(
         subset=["sample_id"], keep="last"
@@ -658,7 +703,7 @@ if __name__ == "__main__":
     low_coverage_samples = ans[ans["percent_coverage_cds"] < min_coverage]
     # ignore samples below minimum coverage and average depth
     qc_filter = (ans["percent_coverage_cds"] >= min_coverage) & (
-        ans["avg_depth"] >= min_depth
+            ans["avg_depth"] >= min_depth
     )
     ans = ans.loc[qc_filter]
     # generate concatenated consensus sequences
@@ -671,7 +716,7 @@ if __name__ == "__main__":
         if not Path.isdir(msa_dir):
             Path.mkdir(msa_dir)
         seqs_dir = Path(out_dir / "fa")
-        copy(ref_path, seqs_dir)
+        # copy(ref_path, seqs_dir)
         # generate files containing metadata for Github, GISAID, GenBank
         # GitHub metadata for all samples (out_dir/metadata.csv)
         git_meta_df = create_github_meta(
@@ -691,32 +736,74 @@ if __name__ == "__main__":
         # TODO: Need to confirm this works with pairwise alignment as well
         msa_data = bs.load_fasta(msa_fp, is_aligned=False)
         # identify insertions
-        #TODO: Swap all methods below for pairwise alignment based
-        insertions = bm.identify_insertions(
-            msa_data,
-            meta_fp=meta_fp,
-            patient_zero=patient_zero,
-            min_ins_len=1,
-            data_src="alab",
-        )
+        # get a list of all the consensus sequence files
+        consensus_files = glob.glob(f"{msa_fp_indiv}/*.fasta")
+        insertion_frame_list = [
+            bm.identify_insertions(
+                bs.load_fasta(seq_fp, is_aligned=True),
+                meta_fp=meta_fp,
+                patient_zero=patient_zero,
+                min_ins_len=1,
+                data_src="alab",
+            )
+            for seq_fp in consensus_files]
+        insertions = pd.concat(insertion_frame_list)
+        # merge insertion counts
+        insertions = insertions.groupby(['mutation', 'absolute_coords', 'is_frameshift',
+                                       'gene', 'indel_len', 'relative_coords', 'prev_10nts',
+                                        'next_10nts', 'type'])['samples'].apply(','.join).reset_index()
+        insertions['num_samples'] = insertions['samples'].str.count(',') + 1
+        # reorder insertion count dataframe
+        insertions = insertions[['type', 'mutation', 'absolute_coords', 'is_frameshift',
+                                       'gene', 'indel_len', 'relative_coords', 'prev_10nts', 'next_10nts',
+                                       'samples', 'num_samples']]
         # save insertion results to file
         insertions.to_csv(out_dir / "insertions.csv", index=False)
         # identify substitution mutations
-        substitutions = bm.identify_replacements(
-            msa_data, meta_fp=meta_fp, data_src="alab", patient_zero=patient_zero
-        )
+        substitution_frame_list = [
+            bm.identify_replacements(
+                bs.load_fasta(seq_fp, is_aligned=True),
+                meta_fp=meta_fp,
+                data_src="alab",
+                patient_zero=patient_zero
+            )
+            for seq_fp in consensus_files
+        ]
+        substitutions = pd.concat(substitution_frame_list)
+        # merge substitution counts
+        substitutions = substitutions.groupby(['mutation', 'ref_codon',
+                                               'alt_codon','pos','ref_aa','codon_num','alt_aa',
+                                               'type', 'gene'])['samples'].apply(','.join).reset_index()
+        substitutions['num_samples'] = substitutions['samples'].str.count(',') + 1
+        # reorder substitution count dataframe
+        substitutions = substitutions[['type', 'mutation', 'gene', 'ref_codon', 'alt_codon',
+                                       'pos', 'ref_aa', 'codon_num', 'alt_aa', 'num_samples', 'samples']]
         # save substitution results to file
-        substitutions.to_csv(out_dir / "replacements.csv", index=False)
+        substitutions.to_csv(out_dir / "substitutions.csv", index=False)
         # identify deletions
-        deletions = bm.identify_deletions(
-            msa_data,
-            meta_fp=meta_fp,
-            data_src="alab",
-            patient_zero=patient_zero,
-            min_del_len=1,
-        )
+        deletion_frame_list = [
+            bm.identify_deletions(
+                bs.load_fasta(seq_fp, is_aligned=True),
+                meta_fp=meta_fp,
+                data_src="alab",
+                patient_zero=patient_zero,
+                min_del_len=1
+            )
+            for seq_fp in consensus_files
+        ]
+        deletions = pd.concat(deletion_frame_list)
+        # merge deletions counts
+        deletions = deletions.groupby(['mutation', 'absolute_coords', 'is_frameshift', 'gene',
+                                       'indel_len', 'indel_seq', 'relative_coords', 'prev_10nts',
+                                       'next_10nts', 'type'])['samples'].apply(','.join).reset_index()
+        deletions['num_samples'] = deletions['samples'].str.count(',') + 1
+        # reorder deletion count dataframe
+        deletions = deletions[['type', 'mutation', 'absolute_coords', 'is_frameshift', 'gene',
+                               'indel_len', 'indel_seq', 'relative_coords', 'prev_10nts',
+                               'next_10nts', 'num_samples', 'samples']]
         # save deletion results to file
         deletions.to_csv(out_dir / "deletions.csv", index=False)
+
         # identify samples with suspicious INDELs and/or substitutions
         with open("config.json", "r") as f:
             config = json.load(f)
@@ -729,7 +816,7 @@ if __name__ == "__main__":
             nonconcerning_genes,
             nonconcerning_mutations,
         )
-        sus_muts.to_csv(out_dir / "suspicious_mutations.csv", index=False)
+
         # collect metadata for white-listed samples
         gisaid_white = gisaid_meta_df[~gisaid_meta_df["covv_virus_name"].isin(sus_ids)]
         git_white = git_meta_df[~git_meta_df["fasta_hdr"].isin(sus_ids)]
@@ -741,18 +828,74 @@ if __name__ == "__main__":
         gisaid_inspect.to_csv(out_dir / "inspect_gisaid_meta.csv", index=False)
         git_white.to_csv(out_dir / "clean_metadata.csv", index=False)
         git_inspect.to_csv(out_dir / "inspect_metadata.csv", index=False)
-        # re-transfer FASTA and BAM files of samples into either white-listed or inspection-listed folders
+        # # re-transfer FASTA and BAM files of samples into either white-listed or inspection-listed folders
         retransfer_files(
             ans.copy(), out_dir, sus_ids, include_bams=include_bams, ncpus=num_cpus
         )
-        bs.separate_alignments(
-            bs.load_fasta(msa_fp, is_aligned=False),
-            sus_ids=sus_ids,
-            out_dir=msa_dir,
-            filename=out_dir.basename(),
-        )
+        for file in consensus_files:
+            bs.separate_alignments(
+                bs.load_fasta(file, is_aligned=True),
+                sus_ids=sus_ids,
+                out_dir=msa_dir,
+                filename=Path(file).basename(),
+            )
+
+        inspect_dir = msa_dir / "aligned_inspect"
+        corrected_dir = msa_dir / "aligned_corrected"
+        if not Path.isdir(corrected_dir):
+            Path.mkdir(corrected_dir)
+        # loop through mutations
+        # find all samples with that mutation
+        # edit those samples at that location
+        sus_muts_cp = []
+        excluded_genes = ['ORF6', 'ORF7a', 'ORF7b', 'ORF8', 'Non-coding region']
+        for i, row in sus_muts.iterrows():
+            sample_list = row['samples'].split(',')
+            for sample in sample_list:
+                id = sample.split('/')[2]
+                file = Path(glob.glob(f"{inspect_dir}/*{id}*")[0])
+                # get samples to edit (indel length one or nonsense and not in excluded genes)
+                if (row['indel_len'] == 1 or row['alt_aa'] == "*") and row['gene'] not in excluded_genes:
+                    edit_one_nuc(file, row, sample_id=sample, ref=patient_zero)
+                    if '*' not in row['samples']:
+                        row['samples'] = "*" + row['samples']
+                else:
+                    if row['gene'] == 'Non-coding region':
+                        # label files with noncoding mutations
+                        os.rename(file, file.dirname() / file.basename() + '_nc.fa')
+                    else:
+                        # label files that still need inspection
+                        os.rename(file, file.dirname() / file.basename() + '_keep.fa')
+            sus_muts_cp.append(row)
+
+        # write sus mutations to csv (without noncoding mutations)
+        sus_muts_cp = pd.DataFrame(sus_muts_cp, columns=sus_muts.columns).sort_values(by='samples')
+        sus_muts_cp = sus_muts_cp[sus_muts_cp['gene'] != 'Non-coding region']
+        sus_muts_cp.to_csv(out_dir / "suspicious_mutations.csv", index=False)
+
+        # separate out corrected and inspect sus mutations
+        sus_muts_inspect = sus_muts_cp[~sus_muts_cp['samples'].str.contains('\*')].sort_values(by='samples')
+        sus_muts_inspect = pd.DataFrame(sus_muts_inspect, columns=sus_muts.columns)
+        sus_muts_inspect.to_csv(out_dir / "suspicious_mutations_inspect.csv", index=False)
+        sus_muts_corrected = sus_muts_cp[sus_muts_cp['samples'].str.contains('\*')].sort_values(by='samples')
+        sus_muts_corrected = pd.DataFrame(sus_muts_corrected, columns=sus_muts.columns)
+        sus_muts_corrected.to_csv(out_dir / "suspicious_mutations_corrected.csv", index=False)
+
+        # move files with only noncoding mutations to whitelisted folder (don't need to inspect them)
+        white_dir = msa_dir / "aligned_white"
+        for file in glob.glob(f"{inspect_dir}/*aligned_inspect.fa_nc.fa"):
+            os.rename(file, white_dir / Path(file.replace('_nc.fa', '').replace('inspect', 'white')).basename())
+
+        # move inspect files to inspect directory, corrected files with no
+        # more inspection to corrected directory
+        os.rename(inspect_dir, corrected_dir)
+        Path.mkdir(inspect_dir)
+        for file in glob.glob(f"{corrected_dir}/*_keep*.fa"):
+            os.rename(file, inspect_dir / Path(file.replace('.fa_keep', '').replace('.fa_nc', '')).basename())
+
         # generate compressed report containing main results
         bs.generate_release_report(out_dir)
+
     else:
         sus_ids = []
     if not Path.isdir(out_dir):
@@ -773,7 +916,7 @@ if __name__ == "__main__":
             f"{num_samples_missing_bams} samples were ignored because they were missing BAM sequence files\n"
         )
         f.write(
-            f"""{len(sus_ids)} samples contain suspicious mutations and require manual inspection. 
+            f"""{len(sus_ids)} samples contain suspicious mutations and require manual inspection.
         They can be found in {out_dir}/fa_inspect and {out_dir}/bam_inspect\n"""
         )
     print(f"Transfer Complete. All results saved in {out_dir}")

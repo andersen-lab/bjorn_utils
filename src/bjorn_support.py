@@ -105,24 +105,35 @@ def separate_alignments(
 ):
     good_seqs = []
     poor_seqs = []
+    poor = False
     for rec in msa_data:
-        if rec.id in sus_ids:
-            poor_seqs.append(rec)
-        elif rec.id == patient_zero:
+        if rec.id == patient_zero:
             good_seqs.append(rec)
             poor_seqs.append(rec)
+        elif rec.id in sus_ids:
+            poor_seqs.append(rec)
+            poor = True
         else:
             good_seqs.append(rec)
+
+    if poor:
+        poor_msa_fn = filename + "_aligned_inspect.fa"
+        if not Path.isdir(out_dir / "aligned_inspect"):
+            Path.mkdir(out_dir / "aligned_inspect")
+        poor_msa_fp = out_dir / "aligned_inspect" / poor_msa_fn
+        SeqIO.write(poor_seqs, poor_msa_fp, "fasta-2line")
+    else:
+        good_msa_fn = filename + "_aligned_white.fa"
+        if not Path.isdir(out_dir / "aligned_white"):
+            Path.mkdir(out_dir / "aligned_white")
+        good_msa_fp = out_dir / "aligned_white" / good_msa_fn
+        SeqIO.write(good_seqs, good_msa_fp, "fasta-2line")
     #TODO: Change MSA Here
     # good_msa = Align.MultipleSeqAlignment(good_seqs)
-    good_msa_fn = filename + "_aligned_white.fa"
-    good_msa_fp = out_dir / good_msa_fn
-    SeqIO.write(good_seqs, good_msa_fp, "fasta")
+
     #TODO: Change MSA Here
     # poor_msa = Align.MultipleSeqAlignment(poor_seqs)
-    poor_msa_fn = filename + "_aligned_inspect.fa"
-    poor_msa_fp = out_dir / poor_msa_fn
-    SeqIO.write(poor_seqs, poor_msa_fp, "fasta")
+
     return 0
 
 
