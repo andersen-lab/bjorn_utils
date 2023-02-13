@@ -407,7 +407,7 @@ def edit_one_nuc(file: Path, row, sample_id, ref="NC_045512.2"):
 
 if __name__ == "__main__":
     # git pull
-    # subprocess.run(["git", "-C", "/home/al/code/HCoV-19-Genomics", "pull"])
+    subprocess.run(["git", "-C", "/home/al/code/HCoV-19-Genomics", "pull"])
     # Input Parameters
     # COLUMNS TO INCLUDE IN GITHUB METADATA
     git_meta_cols = [
