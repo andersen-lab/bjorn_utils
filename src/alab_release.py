@@ -171,7 +171,8 @@ def get_ids(filepaths: list) -> list:
         n = fp.basename()
         if n[:6] != "SEARCH":
             n = n[n.find("SEARCH"):]
-        query = n.split("_")[0].split("-")
+        end_idx = n.find(".")
+        query = n[:end_idx].split("_")[0].split("-")
         if len(query) > 1:
             ids.append("".join(query[:2]))
         else:
@@ -749,12 +750,13 @@ if __name__ == "__main__":
             for seq_fp in consensus_files]
         insertions = pd.concat(insertion_frame_list)
         # merge insertion counts
-        insertions = insertions.groupby(['mutation', 'absolute_coords', 'is_frameshift',
+        if not insertions.empty:
+            insertions = insertions.groupby(['mutation', 'absolute_coords', 'is_frameshift',
                                        'gene', 'indel_len', 'relative_coords', 'prev_10nts',
                                         'next_10nts', 'type'])['samples'].apply(','.join).reset_index()
-        insertions['num_samples'] = insertions['samples'].str.count(',') + 1
-        # reorder insertion count dataframe
-        insertions = insertions[['type', 'mutation', 'absolute_coords', 'is_frameshift',
+            insertions['num_samples'] = insertions['samples'].str.count(',') + 1
+            # reorder insertion count dataframe
+            insertions = insertions[['type', 'mutation', 'absolute_coords', 'is_frameshift',
                                        'gene', 'indel_len', 'relative_coords', 'prev_10nts', 'next_10nts',
                                        'samples', 'num_samples']]
         # save insertion results to file
@@ -771,12 +773,13 @@ if __name__ == "__main__":
         ]
         substitutions = pd.concat(substitution_frame_list)
         # merge substitution counts
-        substitutions = substitutions.groupby(['mutation', 'ref_codon',
+        if not substitutions.empty:
+            substitutions = substitutions.groupby(['mutation', 'ref_codon',
                                                'alt_codon','pos','ref_aa','codon_num','alt_aa',
                                                'type', 'gene'])['samples'].apply(','.join).reset_index()
-        substitutions['num_samples'] = substitutions['samples'].str.count(',') + 1
-        # reorder substitution count dataframe
-        substitutions = substitutions[['type', 'mutation', 'gene', 'ref_codon', 'alt_codon',
+            substitutions['num_samples'] = substitutions['samples'].str.count(',') + 1
+            # reorder substitution count dataframe
+            substitutions = substitutions[['type', 'mutation', 'gene', 'ref_codon', 'alt_codon',
                                        'pos', 'ref_aa', 'codon_num', 'alt_aa', 'num_samples', 'samples']]
         # save substitution results to file
         substitutions.to_csv(out_dir / "substitutions.csv", index=False)
@@ -793,14 +796,15 @@ if __name__ == "__main__":
         ]
         deletions = pd.concat(deletion_frame_list)
         # merge deletions counts
-        deletions = deletions.groupby(['mutation', 'absolute_coords', 'is_frameshift', 'gene',
+        if not deletions.empty:
+            deletions = deletions.groupby(['mutation', 'absolute_coords', 'is_frameshift', 'gene',
                                        'indel_len', 'indel_seq', 'relative_coords', 'prev_10nts',
                                        'next_10nts', 'type'])['samples'].apply(','.join).reset_index()
-        deletions['num_samples'] = deletions['samples'].str.count(',') + 1
-        # reorder deletion count dataframe
-        deletions = deletions[['type', 'mutation', 'absolute_coords', 'is_frameshift', 'gene',
-                               'indel_len', 'indel_seq', 'relative_coords', 'prev_10nts',
-                               'next_10nts', 'num_samples', 'samples']]
+            deletions['num_samples'] = deletions['samples'].str.count(',') + 1
+            # reorder deletion count dataframe
+            deletions = deletions[['type', 'mutation', 'absolute_coords', 'is_frameshift', 'gene',
+                                'indel_len', 'indel_seq', 'relative_coords', 'prev_10nts',
+                                'next_10nts', 'num_samples', 'samples']]
         # save deletion results to file
         deletions.to_csv(out_dir / "deletions.csv", index=False)
 
