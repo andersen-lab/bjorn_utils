@@ -189,7 +189,7 @@ def process_coverage_sample_ids(x):
     if len(query) == 1:
         # query = fp.basename().split('_')[0].split('-')
         return "".join(
-            x.split("_")[0].split("-")[:2]
+            x.split("_")[0].split(".")[0].split("-")[:2]
         )  # Format could be SEARCH-xxxx-LOC or SEARCH-xxxx
     else:
         start_idx = x.find("SEARCH")
