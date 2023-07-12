@@ -133,6 +133,7 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
         "covv_authors",
         "covv_comment",
         "comment_type",
+        "covv_consortium"
     ]
     with open("/home/al/code/bjorn_utils/metadata_column_mapping.json", "r") as infile:
         column_mapping = json.load(infile)["gisaid"]
@@ -145,7 +146,7 @@ def create_gisaid_meta(new_meta_df: pd.DataFrame, meta_cols: list):
         "covv_patient_status",
         "covv_sampling_strategy",
     ]
-    empty_cols = ["covv_comment", "comment_type"]
+    empty_cols = ["covv_comment", "comment_type", "covv_consortium"]
     # TODO: If covv_passage to have "Original" if blank or string = "N/A"
     for col in na_cols:
         converted_meta_df[col] = "N/A"
