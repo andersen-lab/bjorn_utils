@@ -538,6 +538,15 @@ if __name__ == "__main__":
         required=True,
         help="Output csv for metadata of the released samples",
     )
+    
+    parser.add_argument(
+        "-t",
+        "--tech",
+        type=str,
+        required=True,
+        help="Sequencing technology (illumina or ont) used",
+    )
+    
     args = parser.parse_args()
 
     # whether or not to include bam files in the release
@@ -559,10 +568,12 @@ if __name__ == "__main__":
     released_samples_fpath = args.output_metadata
     # Whether run is dry
     dry_run = args.not_dry_run
+    tech = args.tech
     print(
         f"""User Specified Parameters:
     Dry run: {dry_run}.
     Include BAMS: {include_bams}.
+    Tech: {tech}.
     Reading repository metadata from {released_samples_fpath}.
     Searching analysis folder {analysis_fpath}.
     """
@@ -574,7 +585,7 @@ if __name__ == "__main__":
         analysis_fpath,
         data_fmt="bam",
         data_type="merged_aligned_bams",
-        tech="illumina",
+        tech=tech,
         generalised=True,
         return_type="list",
     )
@@ -591,7 +602,7 @@ if __name__ == "__main__":
         analysis_fpath,
         data_fmt="fa",
         data_type="consensus_sequences",
-        tech="illumina",
+        tech=tech,
         generalised=True,
         return_type="list",
     )
@@ -665,7 +676,7 @@ if __name__ == "__main__":
         analysis_fpath,
         data_fmt="tsv",
         data_type="trimmed_bams",
-        tech="illumina/reports",
+        tech=tech+"/reports",
         generalised=True,
         return_type="list",
     )
