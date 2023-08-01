@@ -17,12 +17,7 @@ conda activate bjorn_utils
 
 ## Usage
 
-Current stable branch is "msa_workflow", use all below instructions on that branch.
-
-"pairwise_alignment_workflow" needs major rework to address the following:
-- Sporadic errors in loading reference sequence
-- Need to check aligned sequence for changes, not reference
-- Need to check without regard for sequence length, and using new gene reference system as lengths can vary
+Current stable branch is "main", use all below instructions on that branch.
 
 ### Post-processing of SARS-CoV-2 Sequencing Results for Release to public databases
 * Activate `bjorn` environment
@@ -36,6 +31,7 @@ conda activate bjorn_utils
     * number of CPU cores available for use
     * minimum coverage required for each sample (QC filter)
     * minimum average depth required for each sample (QC filter)
+    * sequencing technology used
     * DEFAULT: test parameters
 * Open `config.json` to specify your parameters such as
     * list of SARS-CoV-2 genes that are considered non-concerning
