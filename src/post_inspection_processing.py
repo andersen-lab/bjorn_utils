@@ -30,23 +30,27 @@ def merge_gisaid_ids(gisaid_log_file: str = "/home/al/code/bjorn_utils/src/gisai
         # reads all the lines from the log minus the last two which are not in the same format
         lines = infile.readlines()[:-2]
     # get the first column, which are our own ids again
-    column_1 = [element.split(";")[0] for element in lines]
+    column_1 = [element.split(':')[-1].split(";")[0][2:] for element in lines]
     # get the second column, which are gisaid ids
-    column_2 = [element.split(";")[1].strip("\n") for element in lines]
+    column_2 = [element.split(':')[-1].split(';')[-1].strip('\n')[1:-2] for element in lines]
     # generate a dataframe with these two columns
     df = pd.DataFrame(list(zip(column_2, column_1)), columns =['gisaid_accession', 'fasta_hdr'])
     # read metadata file
     metadata = pd.read_csv(metadata_path)
     column_order = metadata.columns.to_list()
     # sort for the metadata where gisaid_id is missing
-    missing_gisaid_id = metadata[metadata["gisaid_accession"].isna()].drop(columns=["gisaid_accession"])
-    not_missing_gisaid_id = metadata[~metadata["gisaid_accession"].isna()]
+    #missing_gisaid_id = metadata[metadata["gisaid_accession"].isna()].drop(columns=["gisaid_accession"])
+    #not_missing_gisaid_id = metadata[~metadata["gisaid_accession"].isna()]
     # merge data
-    merged = missing_gisaid_id.merge(df, how='left', on='fasta_hdr')
+    merged = metadata.merge(df, how='left', on='fasta_hdr')
+    merged['gisaid_accession_x'] = merged['gisaid_accession_y'].fillna(merged['gisaid_accession_x'])
+    merged['gisaid_accession']=merged['gisaid_accession_x']
+    merged=merged.drop(['gisaid_accession_x', 'gisaid_accession_y'],axis=1)
     # reset column order and return
-    new_metadata = pd.concat([not_missing_gisaid_id, merged[column_order]])
+    #new_metadata = pd.concat([not_missing_gisaid_id, merged[column_order]])
     # write new_metadata to disk
-    new_metadata.to_csv(metadata_path, index=False)
+    merged=merged[column_order]
+    merged.to_csv(metadata_path, index=False)
     return
 
 def merge_zipcodes(local_file_path: str = "", metadata_path: str = "/home/al/code/HCoV-19-Genomics/metadata.csv", config_key_path: str = "/home/al/code/bjorn_utils/bjorn.ini") -> None:
@@ -234,22 +238,19 @@ if __name__ == "__main__":
     # now that pangolin checks are complete, we can start gisaid upload
     # actual gisaid upload
     gisaid_failed_metadata = os.path.join(sys.argv[1], "gisaid_failed_metadata.csv")
-    subprocess.run(["./gisaid_uploader",
-                    "CoV",
-                    "upload",
-                    "--fasta",
-                    gisaid_fasta,
-                    "--csv" ,
+    gisaid_log = os.path.join(sys.argv[1],"gisaid_uploader.log")
+    subprocess.run(["./gisaid_cli3_uploader.sh",
                     gisaid_metadata,
-                    "--failedout",
-                    gisaid_failed_metadata]
+                    gisaid_fasta,
+                    gisaid_failed_metadata,
+                    gisaid_log]
                 )
 
     # kick off gsutil upload
     subprocess.run(["./gsutil_uploader.sh", sys.argv[1]])
 
     # use gisaid metadata to update the github metadata
-    merge_gisaid_ids()
+    merge_gisaid_ids(gisaid_log_file = gisaid_log)
 
     # merge zipcode data
     if len(sys.argv) == 3:
